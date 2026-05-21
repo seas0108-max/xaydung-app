@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mua Sắm VL">
+<meta name="theme-color" content="#0f1117">
+<title>Quản Lý Mua Sắm Vật Liệu</title>
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #181b24;
+  --surface2: #1e2230;
+  --border: #2a2f42;
+  --accent: #e8a04a;
+  --blue: #5b8dee;
+  --green: #3ecf8e;
+  --red: #f06a6a;
+  --orange: #f0a06a;
+  --text: #e8eaf0;
+  --muted: #7a8098;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  font-family: -apple-system, 'Helvetica Neue', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding-top: var(--safe-top);
+}
+
+.header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 16px 10px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
+.header p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+/* SUMMARY BAR */
+.sum-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 12px;
+  background: var(--bg);
+}
+.sum-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 10px;
+}
+.sum-lbl { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; }
+.sum-val { font-size: 15px; font-weight: 700; margin-top: 3px; }
+
+/* TOOLBAR */
+.toolbar {
+  display: flex;
+  gap: 8px;
+  padding: 0 12px 12px;
+  align-items: center;
+}
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  padding: 9px 16px; border-radius: 10px; border: none;
+  font-family: inherit; font-size: 13px; font-weight: 700;
+  cursor: pointer;
+}
+.btn:active { opacity: 0.75; }
+.btn-accent { background: var(--accent); color: #0f1117; }
+.btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); font-size: 12px; }
+.btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 7px; }
+
+/* FILTER CHIPS */
+.filter-row {
+  display: flex; gap: 6px; padding: 0 12px 12px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.filter-row::-webkit-scrollbar { display: none; }
+.fchip {
+  padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  border: 1px solid var(--border); background: var(--surface2); color: var(--muted);
+  cursor: pointer; white-space: nowrap; font-family: inherit;
+}
+.fchip.on { background: var(--accent); color: #0f1117; border-color: var(--accent); }
+
+/* TABLE WRAPPER */
+.table-wrap {
+  overflow-x: auto;
+  padding: 0 12px 80px;
+  -webkit-overflow-scrolling: touch;
+}
+
+table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+}
+
+thead th {
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+}
+
+thead th:first-child { border-radius: 10px 0 0 0; }
+thead th:last-child { border-radius: 0 10px 0 0; }
+
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+tbody tr:hover { background: var(--surface2); }
+
+tbody td {
+  padding: 11px 12px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+tbody tr:last-child td { border-bottom: none; }
+
+.tbl-wrap-inner {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* CELL TYPES */
+.cell-name { font-weight: 600; color: var(--text); max-width: 160px; white-space: normal; line-height: 1.3; }
+.cell-supplier { color: var(--muted); font-size: 12px; }
+.cell-money { font-weight: 700; font-family: 'SF Mono', monospace; text-align: right; }
+.cell-money.income { color: var(--green); }
+.cell-money.expense { color: var(--red); }
+.cell-money.neutral { color: var(--text); }
+.cell-date { color: var(--muted); font-size: 12px; }
+.cell-date.done { color: var(--green); }
+.cell-date.pending { color: var(--orange); }
+.cell-date.late { color: var(--red); }
+
+/* BADGE */
+.badge {
+  display: inline-block; padding: 3px 9px; border-radius: 999px;
+  font-size: 11px; font-weight: 700;
+}
+.b-ordered { background: #1a2540; color: var(--blue); }
+.b-received { background: #0d2b1f; color: var(--green); }
+.b-paid { background: #0d2b1f; color: var(--green); }
+.b-pending { background: #2b1a0d; color: var(--orange); }
+.b-late { background: #2a1a1a; color: var(--red); }
+
+/* PROGRESS DOT ROW */
+.dot-row { display: flex; gap: 4px; align-items: center; }
+.dot { width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--border); }
+.dot.done { background: var(--green); border-color: var(--green); }
+.dot.pending { background: var(--orange); border-color: var(--orange); }
+.dot.empty { background: transparent; }
+
+/* NET BALANCE */
+.net-positive { color: var(--green); font-weight: 700; }
+.net-negative { color: var(--red); font-weight: 700; }
+
+/* MODAL */
+.overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75); z-index: 200;
+  align-items: flex-end; justify-content: center;
+}
+.overlay.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border-top-left-radius: 20px; border-top-right-radius: 20px;
+  padding: 20px 16px; padding-bottom: calc(20px + var(--safe-bottom));
+  width: 100%; max-width: 520px; max-height: 90vh;
+  overflow-y: auto; border: 1px solid var(--border); border-bottom: none;
+  -webkit-overflow-scrolling: touch;
+}
+.modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.modal-title { font-size: 16px; font-weight: 700; }
+.close-btn {
+  background: var(--surface2); border: none; color: var(--muted);
+  width: 28px; height: 28px; border-radius: 50%; font-size: 14px; cursor: pointer;
+}
+
+label { display: block; font-size: 11px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+input, select, textarea {
+  width: 100%; background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-family: inherit;
+  font-size: 15px; padding: 10px 12px; margin-bottom: 12px;
+  outline: none; -webkit-appearance: none;
+}
+input:focus, select:focus { border-color: var(--accent); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grid2 input, .grid2 select { margin-bottom: 12px; }
+
+.section-label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--accent); margin: 14px 0 8px;
+  padding-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+
+.btn-block { width: 100%; margin-top: 4px; padding: 13px; font-size: 15px; border-radius: 12px; }
+
+.empty { text-align: center; color: var(--muted); padding: 50px 0; font-size: 14px; }
+
+/* BOTTOM FAB */
+.fab {
+  position: fixed; bottom: calc(20px + var(--safe-bottom)); right: 16px;
+  background: var(--accent); color: #0f1117;
+  width: 52px; height: 52px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; font-weight: 700; border: none; cursor: pointer;
+  box-shadow: 0 4px 20px rgba(232,160,74,0.4);
+  z-index: 100;
+}
+
+/* COLOR CODED COLUMNS */
+th.col-order { border-top: 2px solid var(--blue); }
+th.col-receive { border-top: 2px solid var(--green); }
+th.col-pay { border-top: 2px solid var(--red); }
+th.col-capital { border-top: 2px solid var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🛒 Quản Lý Mua Sắm Vật Liệu</h1>
+  <p id="proj-name-display">Tất cả dự án</p>
+</div>
+
+<!-- SUMMARY -->
+<div class="sum-bar">
+  <div class="sum-box">
+    <div class="sum-lbl">Tổng Đơn</div>
+    <div class="sum-val" id="s-total" style="color:var(--blue)">0</div>
+  </div>
+  <div class="sum-box">
+    <div class="sum-lbl">Tổng Chi</div>
+    <div class="sum-val" id="s-chi" style="color:var(--red)">0đ</div>
+  </div>
+  <div class="sum-box">
+    <div class="sum-lbl">Vốn Nhận</div>
+    <div class="sum-val" id="s-von" style="color:var(--green)">0đ</div>
+  </div>
+  <div class="sum-box">
+    <div class="sum-lbl">Chênh Lệch</div>
+    <div class="sum-val" id="s-net">0đ</div>
+  </div>
+</div>
+
+<!-- FILTER -->
+<div class="filter-row">
+  <button class="fchip on" onclick="setFilter('all',this)">Tất cả</button>
+  <button class="fchip" onclick="setFilter('ordered',this)">Đã đặt</button>
+  <button class="fchip" onclick="setFilter('received',this)">Đã nhận hàng</button>
+  <button class="fchip" onclick="setFilter('paid',this)">Đã thanh toán</button>
+  <button class="fchip" onclick="setFilter('pending',this)">Chưa thanh toán</button>
+  <button class="fchip" onclick="setFilter('late',this)">Trễ hạn</button>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <button class="btn btn-accent" onclick="openModal()">+ Thêm Đơn</button>
+  <button class="btn btn-ghost" onclick="exportCSV()">📤 Xuất CSV</button>
+</div>
+
+<!-- TABLE -->
+<div class="table-wrap">
+  <div class="tbl-wrap-inner">
+    <table>
+      <thead>
+        <tr>
+          <th>Vật liệu / NCC</th>
+          <th class="col-order">Ngày đặt</th>
+          <th class="col-receive">Ngày nhận</th>
+          <th class="col-pay">Tổng tiền</th>
+          <th class="col-pay">Ngày TT</th>
+          <th class="col-capital">Vốn nhận</th>
+          <th class="col-capital">Ngày nhận vốn</th>
+          <th>Ngày chi</th>
+          <th>Tiến độ</th>
+          <th>Trạng thái</th>
+          <th>Ghi chú</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbl-body">
+        <tr><td colspan="12"><div class="empty">Chưa có đơn hàng nào · Nhấn + để thêm</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<button class="fab" onclick="openModal()">+</button>
+
+<!-- MODAL THÊM ĐƠN -->
+<div class="overlay" id="modal" onclick="bgClose(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">📦 Thêm Đơn Hàng</span>
+      <button class="close-btn" onclick="closeModal()">✕</button>
+    </div>
+
+    <div class="section-label">📋 Thông Tin Vật Liệu</div>
+    <label>Tên vật liệu *</label>
+    <input id="f-name" type="text" placeholder="VD: Xi măng PCB40, Sắt phi 16, Gạch ống...">
+    <div class="grid2">
+      <div><label>Số lượng</label><input id="f-qty" type="number" placeholder="100"></div>
+      <div><label>Đơn vị</label><input id="f-unit" type="text" placeholder="bao, m³, cây..."></div>
+    </div>
+    <div class="grid2">
+      <div><label>Đơn giá (đ)</label><input id="f-price" type="number" placeholder="100000" oninput="calcTotal()"></div>
+      <div><label>Tổng tiền (đ)</label><input id="f-total" type="number" placeholder="Tự tính" oninput="manualTotal=true"></div>
+    </div>
+    <label>Nhà cung cấp</label>
+    <input id="f-supplier" type="text" placeholder="Tên cửa hàng / công ty">
+
+    <div class="section-label">📅 Tiến Độ Đặt Hàng</div>
+    <div class="grid2">
+      <div><label>Ngày đặt hàng</label><input id="f-ordered" type="date"></div>
+      <div><label>Ngày nhận hàng</label><input id="f-received" type="date"></div>
+    </div>
+
+    <div class="section-label">💰 Thanh Toán</div>
+    <div class="grid2">
+      <div><label>Ngày thanh toán</label><input id="f-paid" type="date"></div>
+      <div><label>Ngày chi tiền ra</label><input id="f-spent" type="date"></div>
+    </div>
+    <label>Hình thức TT</label>
+    <select id="f-method">
+      <option value="chuyen">Chuyển khoản</option>
+      <option value="tienMat">Tiền mặt</option>
+      <option value="coc">Cọc trước + sau</option>
+    </select>
+
+    <div class="section-label">🏦 Nguồn Vốn</div>
+    <div class="grid2">
+      <div><label>Số tiền vốn nhận (đ)</label><input id="f-capital" type="number" placeholder="0"></div>
+      <div><label>Ngày nhận vốn</label><input id="f-capital-date" type="date"></div>
+    </div>
+    <label>Nguồn vốn từ</label>
+    <input id="f-capital-src" type="text" placeholder="VD: Ngân hàng, đối tác, cá nhân...">
+
+    <div class="section-label">📝 Ghi Chú</div>
+    <input id="f-note" type="text" placeholder="Ghi chú thêm...">
+
+    <button class="btn btn-accent btn-block" onclick="addOrder()">Lưu Đơn Hàng</button>
+  </div>
+</div>
+
+<script>
+const KEY = 'muasam-v1';
+let D = load();
+let filter = 'all';
+let manualTotal = false;
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; }
+}
+function save() { localStorage.setItem(KEY, JSON.stringify(D)); }
+
+function fmt(n) {
+  n = +n;
+  if (!n) return '–';
+  if (n >= 1e9) return (n/1e9).toFixed(2).replace(/\.?0+$/,'') + ' tỷ';
+  if (n >= 1e6) return (n/1e6).toFixed(1).replace(/\.?0+$/,'') + ' tr';
+  return n.toLocaleString('vi-VN') + 'đ';
+}
+
+function today() { return new Date().toISOString().split('T')[0]; }
+
+function calcTotal() {
+  if (manualTotal) return;
+  const qty = +document.getElementById('f-qty').value || 0;
+  const price = +document.getElementById('f-price').value || 0;
+  if (qty && price) document.getElementById('f-total').value = qty * price;
+}
+
+function openModal() {
+  document.getElementById('f-ordered').value = today();
+  document.getElementById('modal').classList.add('open');
+  manualTotal = false;
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+function bgClose(e) { if (e.target.id === 'modal') closeModal(); }
+
+function setFilter(f, el) {
+  filter = f;
+  document.querySelectorAll('.fchip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  render();
+}
+
+function getStatus(o) {
+  const now = today();
+  if (o.paid) return 'paid';
+  if (o.received) return 'received';
+  if (o.ordered) {
+    // Check if payment overdue (>30 days from order)
+    if (o.ordered && !o.paid) {
+      const diff = (new Date(now) - new Date(o.ordered)) / 86400000;
+      if (diff > 30) return 'late';
+    }
+    return 'ordered';
+  }
+  return 'pending';
+}
+
+function statusBadge(s) {
+  const map = {
+    paid: ['b-paid', '✓ Đã TT'],
+    received: ['b-received', '📦 Đã nhận'],
+    ordered: ['b-ordered', '🔵 Đã đặt'],
+    late: ['b-late', '⚠️ Trễ hạn'],
+    pending: ['b-pending', '⏳ Chờ'],
+  };
+  const [cls, label] = map[s] || ['b-pending', s];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function dotRow(o) {
+  const steps = [
+    { key: 'ordered', label: 'Đặt' },
+    { key: 'received', label: 'Nhận' },
+    { key: 'capitalDate', label: 'Vốn' },
+    { key: 'spent', label: 'Chi' },
+    { key: 'paid', label: 'TT' },
+  ];
+  return `<div class="dot-row" title="Đặt → Nhận → Vốn → Chi → TT">
+    ${steps.map(s => `<div class="dot ${o[s.key] ? 'done' : 'empty'}" title="${s.label}"></div>`).join('')}
+  </div>`;
+}
+
+function addOrder() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) return alert('Nhập tên vật liệu');
+  const qty = +document.getElementById('f-qty').value || 0;
+  const price = +document.getElementById('f-price').value || 0;
+  const total = +document.getElementById('f-total').value || qty * price || 0;
+  D.push({
+    id: Date.now(),
+    name,
+    qty, price, total,
+    unit: document.getElementById('f-unit').value,
+    supplier: document.getElementById('f-supplier').value,
+    ordered: document.getElementById('f-ordered').value,
+    received: document.getElementById('f-received').value,
+    paid: document.getElementById('f-paid').value,
+    spent: document.getElementById('f-spent').value,
+    method: document.getElementById('f-method').value,
+    capital: +document.getElementById('f-capital').value || 0,
+    capitalDate: document.getElementById('f-capital-date').value,
+    capitalSrc: document.getElementById('f-capital-src').value,
+    note: document.getElementById('f-note').value,
+  });
+  save();
+  closeModal();
+  clearForm();
+  render();
+}
+
+function clearForm() {
+  ['f-name','f-qty','f-unit','f-price','f-total','f-supplier',
+   'f-ordered','f-received','f-paid','f-spent','f-capital',
+   'f-capital-date','f-capital-src','f-note'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+}
+
+function delOrder(id) {
+  if (!confirm('Xóa đơn hàng này?')) return;
+  D = D.filter(o => o.id !== id);
+  save();
+  render();
+}
+
+function render() {
+  const ml = { chuyen:'CK', tienMat:'TM', coc:'Cọc' };
+
+  let filtered = D;
+  if (filter !== 'all') {
+    filtered = D.filter(o => getStatus(o) === filter);
+  }
+
+  // Summary (always from all)
+  const totalChi = D.reduce((s,o) => s + (o.total||0), 0);
+  const totalVon = D.reduce((s,o) => s + (o.capital||0), 0);
+  const net = totalVon - totalChi;
+  document.getElementById('s-total').textContent = D.length;
+  document.getElementById('s-chi').textContent = fmt(totalChi);
+  document.getElementById('s-von').textContent = fmt(totalVon);
+  const netEl = document.getElementById('s-net');
+  netEl.textContent = fmt(Math.abs(net));
+  netEl.style.color = net >= 0 ? 'var(--green)' : 'var(--red)';
+
+  const tbody = document.getElementById('tbl-body');
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="12"><div class="empty">Không có đơn nào</div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(o => {
+    const status = getStatus(o);
+    const net = (o.capital||0) - (o.total||0);
+    return `<tr>
+      <td>
+        <div class="cell-name">${o.name}</div>
+        <div class="cell-supplier">${o.supplier||'–'}</div>
+        ${o.qty ? `<div style="font-size:11px;color:var(--muted)">${o.qty} ${o.unit||''} × ${fmt(o.price)}</div>` : ''}
+      </td>
+      <td class="cell-date ${o.ordered?'done':''}">${o.ordered||'–'}</td>
+      <td class="cell-date ${o.received?'done':'pending'}">${o.received||'⏳ Chờ'}</td>
+      <td class="cell-money expense">${fmt(o.total)}</td>
+      <td class="cell-date ${o.paid?'done':status==='late'?'late':'pending'}">
+        ${o.paid||(!o.paid&&status==='late'?'⚠️ Trễ':'⏳ Chờ')}
+        ${o.method ? `<div style="font-size:10px;color:var(--muted)">${ml[o.method]||''}</div>` : ''}
+      </td>
+      <td class="cell-money income">${fmt(o.capital)}</td>
+      <td class="cell-date ${o.capitalDate?'done':''}">${o.capitalDate||'–'}</td>
+      <td class="cell-date ${o.spent?'done':''}">${o.spent||'–'}</td>
+      <td>${dotRow(o)}</td>
+      <td>${statusBadge(status)}</td>
+      <td style="color:var(--muted);font-size:12px;max-width:120px;white-space:normal">${o.note||'–'}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="delOrder(${o.id})">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function exportCSV() {
+  const headers = ['Vật liệu','NCC','SL','Đơn vị','Đơn giá','Tổng tiền','Ngày đặt','Ngày nhận','Ngày TT','Ngày chi','Vốn nhận','Ngày nhận vốn','Nguồn vốn','Ghi chú'];
+  const rows = D.map(o => [
+    o.name, o.supplier||'', o.qty||'', o.unit||'', o.price||'', o.total||'',
+    o.ordered||'', o.received||'', o.paid||'', o.spent||'',
+    o.capital||'', o.capitalDate||'', o.capitalSrc||'', o.note||''
+  ]);
+  const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'muasam-vatlieu.csv';
+  a.click();
+}
+
+// Load sample data for preview
+D = [
+  { id:1, name:'Xi măng PCB40', supplier:'Cửa hàng Minh Đức', qty:200, unit:'bao', price:95000, total:19000000, ordered:'2026-04-10', received:'2026-04-13', paid:'2026-04-13', spent:'2026-04-13', method:'chuyen', capital:20000000, capitalDate:'2026-04-09', capitalSrc:'Ngân hàng', note:'Đã nghiệm thu' },
+  { id:2, name:'Sắt phi 16 CB300', supplier:'Thép Miền Nam', qty:5, unit:'tấn', price:18500000, total:92500000, ordered:'2026-04-15', received:'2026-04-20', paid:'', spent:'', method:'coc', capital:50000000, capitalDate:'2026-04-14', capitalSrc:'Đối tác A', note:'Còn thiếu 42.5 triệu' },
+  { id:3, name:'Gạch ống 4 lỗ', supplier:'Gạch Đồng Nai', qty:5000, unit:'viên', price:2200, total:11000000, ordered:'2026-05-01', received:'', paid:'', spent:'', method:'tienMat', capital:0, capitalDate:'', capitalSrc:'', note:'Chờ giao hàng' },
+  { id:4, name:'Cát vàng xây dựng', supplier:'Vật liệu Hoàng Long', qty:15, unit:'m³', price:380000, total:5700000, ordered:'2026-03-20', received:'2026-03-21', paid:'', spent:'', method:'tienMat', capital:6000000, capitalDate:'2026-03-19', capitalSrc:'Cá nhân', note:'' },
+];
+save();
+render();
+</script>
+</body>
+</html>
