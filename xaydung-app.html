@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Xây Dựng">
+<meta name="theme-color" content="#0f1117">
+<title>Theo Dõi Xây Dựng</title>
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #181b24;
+  --surface2: #1e2230;
+  --border: #2a2f42;
+  --accent: #e8a04a;
+  --blue: #5b8dee;
+  --green: #3ecf8e;
+  --red: #f06a6a;
+  --orange: #f0a06a;
+  --text: #e8eaf0;
+  --muted: #7a8098;
+  --r: 12px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: -apple-system, 'Helvetica Neue', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+}
+
+/* HEADER */
+.header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 16px 10px;
+  flex-shrink: 0;
+}
+.header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
+.header p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+/* TABS */
+.tabs {
+  display: flex;
+  gap: 6px;
+  padding: 10px 12px;
+  overflow-x: auto;
+  flex-shrink: 0;
+  background: var(--bg);
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.tab.active { background: var(--accent); color: #0f1117; border-color: var(--accent); }
+
+/* CONTENT */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  -webkit-overflow-scrolling: touch;
+}
+.section { display: none; }
+.section.active { display: block; }
+
+/* CARDS */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.card-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+/* FORM ELEMENTS */
+label { display: block; font-size: 11px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+input, select, textarea {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  outline: none;
+  -webkit-appearance: none;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+textarea { min-height: 70px; resize: none; }
+select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237a8098' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grid2 > * { margin-bottom: 0; }
+.grid2 input, .grid2 select { margin-bottom: 12px; }
+
+/* PROGRESS */
+.pbar-wrap { background: var(--bg); border-radius: 999px; height: 7px; overflow: hidden; margin: 5px 0; }
+.pbar { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--blue), var(--accent)); transition: width 0.3s; }
+
+/* BADGE */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* BUTTONS */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn:active { opacity: 0.75; }
+.btn-accent { background: var(--accent); color: #0f1117; }
+.btn-blue { background: var(--blue); color: #fff; }
+.btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.btn-block { width: 100%; }
+
+/* CHIP GROUP */
+.chip-group { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.chip {
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.chip.on { background: var(--accent); color: #0f1117; border-color: var(--accent); }
+
+/* SUMMARY GRID */
+.sum-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.sum-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; }
+.sum-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; }
+.sum-val { font-size: 20px; font-weight: 700; margin-top: 4px; }
+
+/* LIST ROW */
+.row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+.row-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.row-name { font-weight: 700; font-size: 14px; }
+.row-sub { font-size: 11px; color: var(--muted); }
+.row-meta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 11px; color: var(--muted); margin-top: 6px; }
+.del-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); border-radius: 6px; padding: 3px 9px; font-size: 12px; cursor: pointer; font-family: inherit; }
+
+/* MODAL */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 200;
+  align-items: flex-end;
+  justify-content: center;
+}
+.overlay.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  padding: 20px 16px;
+  padding-bottom: calc(20px + var(--safe-bottom));
+  width: 100%;
+  max-width: 500px;
+  max-height: 88vh;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  -webkit-overflow-scrolling: touch;
+}
+.modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.modal-title { font-size: 16px; font-weight: 700; }
+.close-btn { background: var(--surface2); border: none; color: var(--muted); width: 28px; height: 28px; border-radius: 50%; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+/* DIVIDER */
+.divider { height: 1px; background: var(--border); margin: 12px 0; }
+
+/* EMPTY */
+.empty { text-align: center; color: var(--muted); padding: 40px 0; font-size: 14px; }
+
+/* RANGE */
+input[type=range] {
+  padding: 0; background: transparent; border: none; margin-bottom: 12px;
+  accent-color: var(--accent);
+}
+
+/* INSTALL BANNER */
+.install-banner {
+  background: linear-gradient(135deg, #1a2540, #1e2230);
+  border: 1px solid var(--blue);
+  border-radius: var(--r);
+  padding: 14px;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+.install-banner strong { color: var(--blue); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📋 Theo Dõi Xây Dựng</h1>
+  <p id="proj-title-display">Nhập tên dự án bên dưới</p>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('tongQuan',this)">📊 Tổng Quan</button>
+  <button class="tab" onclick="switchTab('hangMuc',this)">🏗️ Hạng Mục</button>
+  <button class="tab" onclick="switchTab('chiPhi',this)">💰 Chi Phí</button>
+  <button class="tab" onclick="switchTab('thanhToan',this)">🧾 Thanh Toán</button>
+  <button class="tab" onclick="switchTab('vatTu',this)">🧱 Vật Tư</button>
+</div>
+
+<div class="content">
+
+  <!-- TỔNG QUAN -->
+  <div id="tongQuan" class="section active">
+    <div id="install-hint" class="install-banner" style="display:none">
+      💡 Để dùng như app: Nhấn <strong>Chia sẻ ⬆️</strong> → <strong>"Thêm vào Màn hình chính"</strong>
+    </div>
+    <div class="card">
+      <div class="card-title">⚙️ Thông Tin Dự Án</div>
+      <label>Tên dự án / địa chỉ</label>
+      <input id="p-name" type="text" placeholder="VD: Nhà phố Quận 7 – 4 tầng" oninput="sp('name',this.value);updateDisplay()">
+      <div class="grid2">
+        <div><label>Ngày khởi công</label><input id="p-start" type="date" oninput="sp('start',this.value);renderSummary()"></div>
+        <div><label>Dự kiến xong</label><input id="p-end" type="date" oninput="sp('end',this.value);renderSummary()"></div>
+      </div>
+      <div class="grid2">
+        <div><label>Tổng dự toán (đ)</label><input id="p-budget" type="number" placeholder="1000000000" oninput="sp('budget',this.value);renderSummary()"></div>
+        <div><label>Nhà thầu chính</label><input id="p-contractor" type="text" placeholder="Tên nhà thầu" oninput="sp('contractor',this.value)"></div>
+      </div>
+    </div>
+    <div class="sum-grid">
+      <div class="sum-box"><div class="sum-lbl">Tiến Độ</div><div class="sum-val" id="s-prog" style="color:var(--blue)">0%</div></div>
+      <div class="sum-box"><div class="sum-lbl">Hạng Mục</div><div class="sum-val" id="s-hm" style="color:var(--green)">0/0</div></div>
+      <div class="sum-box"><div class="sum-lbl">Đã Chi</div><div class="sum-val" id="s-spent" style="color:var(--red)">0đ</div></div>
+      <div class="sum-box"><div class="sum-lbl">Còn Lại</div><div class="sum-val" id="s-remain" style="color:var(--accent)">–</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📅 Tiến Độ Tổng Thể</div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>Hoàn thành</span><span id="s-pct">0%</span></div>
+      <div class="pbar-wrap"><div class="pbar" id="main-pbar" style="width:0%"></div></div>
+      <div id="days-info" style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px"></div>
+    </div>
+  </div>
+
+  <!-- HẠNG MỤC -->
+  <div id="hangMuc" class="section">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="font-weight:700">Hạng Mục Thi Công</span>
+      <button class="btn btn-accent" onclick="openModal('m-hm')" style="padding:8px 14px;font-size:13px">+ Thêm</button>
+    </div>
+    <div id="hm-list"><div class="empty">Chưa có hạng mục nào</div></div>
+  </div>
+
+  <!-- CHI PHÍ -->
+  <div id="chiPhi" class="section">
+    <div class="card">
+      <div class="card-title">📊 Phân Bổ Chi Phí</div>
+      <div id="cp-bars"><div style="color:var(--muted);font-size:13px">Chưa có dữ liệu</div></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="font-weight:700">Khoản Chi</span>
+      <button class="btn btn-blue" onclick="openModal('m-cp')" style="padding:8px 14px;font-size:13px">+ Ghi Chi</button>
+    </div>
+    <div id="cp-list"><div class="empty">Chưa có khoản chi nào</div></div>
+  </div>
+
+  <!-- THANH TOÁN -->
+  <div id="thanhToan" class="section">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="font-weight:700">Đợt Thanh Toán Nhà Thầu</span>
+      <button class="btn btn-accent" onclick="openModal('m-tt')" style="padding:8px 14px;font-size:13px">+ Thêm</button>
+    </div>
+    <div id="tt-list"><div class="empty">Chưa có đợt thanh toán nào</div></div>
+    <div id="tt-sum-card"></div>
+  </div>
+
+  <!-- VẬT TƯ -->
+  <div id="vatTu" class="section">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="font-weight:700">Vật Tư & Vật Liệu</span>
+      <button class="btn btn-accent" onclick="openModal('m-vt')" style="padding:8px 14px;font-size:13px">+ Thêm</button>
+    </div>
+    <div id="vt-list"><div class="empty">Chưa có vật tư nào</div></div>
+  </div>
+
+</div>
+
+<!-- MODAL: Hạng Mục -->
+<div class="overlay" id="m-hm" onclick="bgClose(event,'m-hm')">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title">🏗️ Thêm Hạng Mục</span><button class="close-btn" onclick="closeModal('m-hm')">✕</button></div>
+    <label>Tên hạng mục *</label>
+    <input id="hm-name" type="text" placeholder="VD: Phần móng, Kết cấu, Hoàn thiện...">
+    <label>Trạng thái</label>
+    <div class="chip-group" id="hm-status-grp">
+      <button class="chip" onclick="pickChip(this,'hm-status-grp','todo')">Chưa bắt đầu</button>
+      <button class="chip on" onclick="pickChip(this,'hm-status-grp','doing')">Đang thi công</button>
+      <button class="chip" onclick="pickChip(this,'hm-status-grp','pause')">Tạm dừng</button>
+      <button class="chip" onclick="pickChip(this,'hm-status-grp','done')">Hoàn thành</button>
+    </div>
+    <label>Tiến độ: <span id="hm-pval">50</span>%</label>
+    <input type="range" id="hm-prog" min="0" max="100" value="50" oninput="document.getElementById('hm-pval').textContent=this.value">
+    <div class="grid2">
+      <div><label>Ngày bắt đầu</label><input id="hm-start" type="date"></div>
+      <div><label>Dự kiến xong</label><input id="hm-end" type="date"></div>
+    </div>
+    <label>Dự toán hạng mục (đ)</label>
+    <input id="hm-budget" type="number" placeholder="200000000">
+    <label>Nhà thầu phụ</label>
+    <input id="hm-sub" type="text" placeholder="Tên đội / công ty">
+    <label>Ghi chú</label>
+    <textarea id="hm-note" placeholder="Tiến độ, vấn đề phát sinh..."></textarea>
+    <button class="btn btn-accent btn-block" onclick="addHM()">Lưu Hạng Mục</button>
+  </div>
+</div>
+
+<!-- MODAL: Chi Phí -->
+<div class="overlay" id="m-cp" onclick="bgClose(event,'m-cp')">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title">💰 Ghi Khoản Chi</span><button class="close-btn" onclick="closeModal('m-cp')">✕</button></div>
+    <label>Mô tả *</label>
+    <input id="cp-desc" type="text" placeholder="VD: Mua sắt thép, Nhân công đổ bê tông...">
+    <label>Danh mục</label>
+    <div class="chip-group" id="cp-cat-grp">
+      <button class="chip on" onclick="pickChip(this,'cp-cat-grp','vatlieu')">Vật liệu</button>
+      <button class="chip" onclick="pickChip(this,'cp-cat-grp','nhanCong')">Nhân công</button>
+      <button class="chip" onclick="pickChip(this,'cp-cat-grp','thietBi')">Thiết bị</button>
+      <button class="chip" onclick="pickChip(this,'cp-cat-grp','khac')">Khác</button>
+    </div>
+    <label>Số tiền (đ) *</label>
+    <input id="cp-amount" type="number" placeholder="50000000">
+    <label>Ngày chi</label>
+    <input id="cp-date" type="date">
+    <label>Ghi chú</label>
+    <input id="cp-note" type="text" placeholder="Hóa đơn, nhà cung cấp...">
+    <button class="btn btn-blue btn-block" onclick="addCP()">Lưu Khoản Chi</button>
+  </div>
+</div>
+
+<!-- MODAL: Thanh Toán -->
+<div class="overlay" id="m-tt" onclick="bgClose(event,'m-tt')">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title">🧾 Đợt Thanh Toán</span><button class="close-btn" onclick="closeModal('m-tt')">✕</button></div>
+    <label>Nhà thầu / đội *</label>
+    <input id="tt-who" type="text" placeholder="Tên nhà thầu hoặc đội xây">
+    <label>Đợt / mô tả</label>
+    <input id="tt-desc" type="text" placeholder="VD: Đợt 1 – Hoàn thành phần móng">
+    <label>Số tiền (đ) *</label>
+    <input id="tt-amount" type="number" placeholder="150000000">
+    <label>Ngày thanh toán</label>
+    <input id="tt-date" type="date">
+    <label>Trạng thái</label>
+    <div class="chip-group" id="tt-status-grp">
+      <button class="chip" onclick="pickChip(this,'tt-status-grp','chuaThanhToan')">Chưa TT</button>
+      <button class="chip on" onclick="pickChip(this,'tt-status-grp','daThanhToan')">Đã TT</button>
+      <button class="chip" onclick="pickChip(this,'tt-status-grp','tamUng')">Tạm ứng</button>
+    </div>
+    <label>Hình thức</label>
+    <select id="tt-method"><option value="chuyen">Chuyển khoản</option><option value="tienMat">Tiền mặt</option></select>
+    <label>Ghi chú</label>
+    <input id="tt-note" type="text" placeholder="Số hợp đồng, biên bản nghiệm thu...">
+    <button class="btn btn-accent btn-block" onclick="addTT()">Lưu Đợt Thanh Toán</button>
+  </div>
+</div>
+
+<!-- MODAL: Vật Tư -->
+<div class="overlay" id="m-vt" onclick="bgClose(event,'m-vt')">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title">🧱 Thêm Vật Tư</span><button class="close-btn" onclick="closeModal('m-vt')">✕</button></div>
+    <label>Tên vật tư *</label>
+    <input id="vt-name" type="text" placeholder="VD: Xi măng, Cát, Sắt phi 16...">
+    <div class="grid2">
+      <div><label>Số lượng</label><input id="vt-qty" type="number" placeholder="100"></div>
+      <div><label>Đơn vị</label><input id="vt-unit" type="text" placeholder="bao, m³, kg..."></div>
+    </div>
+    <div class="grid2">
+      <div><label>Đơn giá (đ)</label><input id="vt-price" type="number" placeholder="100000"></div>
+      <div><label>Ngày nhập</label><input id="vt-date" type="date"></div>
+    </div>
+    <label>Nhà cung cấp</label>
+    <input id="vt-supplier" type="text" placeholder="Tên cửa hàng / công ty">
+    <label>Trạng thái</label>
+    <div class="chip-group" id="vt-status-grp">
+      <button class="chip on" onclick="pickChip(this,'vt-status-grp','daCoMat')">Đã nhập kho</button>
+      <button class="chip" onclick="pickChip(this,'vt-status-grp','dangDat')">Đang đặt</button>
+      <button class="chip" onclick="pickChip(this,'vt-status-grp','canMua')">Cần mua</button>
+    </div>
+    <label>Ghi chú</label>
+    <input id="vt-note" type="text" placeholder="Quy cách, tiêu chuẩn...">
+    <button class="btn btn-accent btn-block" onclick="addVT()">Lưu Vật Tư</button>
+  </div>
+</div>
+
+<script>
+const KEY = 'xd-app-v2';
+let D = load();
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || newState(); } catch { return newState(); }
+}
+function newState() { return { proj:{}, hm:[], cp:[], tt:[], vt:[] }; }
+function save() { localStorage.setItem(KEY, JSON.stringify(D)); }
+
+// Format money
+function fmt(n) {
+  n = +n;
+  if (!n) return '–';
+  if (n >= 1e9) return (n/1e9).toFixed(2).replace(/\.?0+$/,'') + ' tỷ';
+  if (n >= 1e6) return (n/1e6).toFixed(1).replace(/\.?0+$/,'') + ' tr';
+  return n.toLocaleString('vi-VN') + 'đ';
+}
+
+function today() { return new Date().toISOString().split('T')[0]; }
+
+// Status config
+const ST = {
+  todo: { label:'Chưa bắt đầu', color:'#7a8098', bg:'#1e2230' },
+  doing: { label:'Đang thi công', color:'#5b8dee', bg:'#1a2540' },
+  done: { label:'Hoàn thành', color:'#3ecf8e', bg:'#0d2b1f' },
+  pause: { label:'Tạm dừng', color:'#f0a06a', bg:'#2b1a0d' },
+  daThanhToan: { label:'Đã TT', color:'#3ecf8e', bg:'#0d2b1f' },
+  chuaThanhToan: { label:'Chưa TT', color:'#7a8098', bg:'#1e2230' },
+  tamUng: { label:'Tạm ứng', color:'#5b8dee', bg:'#1a2540' },
+  daCoMat: { label:'Đã nhập', color:'#3ecf8e', bg:'#0d2b1f' },
+  dangDat: { label:'Đang đặt', color:'#5b8dee', bg:'#1a2540' },
+  canMua: { label:'Cần mua', color:'#f06a6a', bg:'#2a1a1a' },
+};
+
+function badge(s) {
+  const c = ST[s] || { label:s, color:'#7a8098', bg:'#1e2230' };
+  return `<span class="badge" style="color:${c.color};background:${c.bg}">${c.label}</span>`;
+}
+
+function pbar(v) {
+  return `<div class="pbar-wrap"><div class="pbar" style="width:${v}%"></div></div>`;
+}
+
+// Project fields
+function sp(k,v) { D.proj[k]=v; save(); }
+
+function updateDisplay() {
+  const n = D.proj.name || 'Nhập tên dự án bên dưới';
+  document.getElementById('proj-title-display').textContent = n;
+}
+
+// Tabs
+function switchTab(id, btn) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  renderAll();
+}
+
+// Modals
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function bgClose(e,id) { if(e.target.classList.contains('overlay')) closeModal(id); }
+
+// Chip groups
+function pickChip(el, grpId, val) {
+  document.querySelectorAll(`#${grpId} .chip`).forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  el.dataset.val = val;
+}
+function getChip(grpId) {
+  const on = document.querySelector(`#${grpId} .chip.on`);
+  return on ? on.dataset.val || on.textContent.trim() : '';
+}
+
+// Init chip vals
+document.querySelectorAll('.chip').forEach(c => {
+  const onclick = c.getAttribute('onclick') || '';
+  const m = onclick.match(/'([^']+)'\)$/);
+  if (m) c.dataset.val = m[1];
+});
+
+// ADD functions
+function addHM() {
+  const name = document.getElementById('hm-name').value.trim();
+  if (!name) return alert('Nhập tên hạng mục');
+  D.hm.push({
+    id: Date.now(),
+    name,
+    status: getChip('hm-status-grp') || 'doing',
+    progress: +document.getElementById('hm-prog').value,
+    start: document.getElementById('hm-start').value,
+    end: document.getElementById('hm-end').value,
+    budget: +document.getElementById('hm-budget').value || 0,
+    sub: document.getElementById('hm-sub').value,
+    note: document.getElementById('hm-note').value,
+  });
+  save();
+  closeModal('m-hm');
+  clearFields(['hm-name','hm-budget','hm-sub','hm-note','hm-start','hm-end']);
+  document.getElementById('hm-prog').value = 50;
+  document.getElementById('hm-pval').textContent = 50;
+  renderAll();
+}
+
+function addCP() {
+  const desc = document.getElementById('cp-desc').value.trim();
+  const amount = +document.getElementById('cp-amount').value;
+  if (!desc || !amount) return alert('Nhập đầy đủ mô tả và số tiền');
+  D.cp.push({
+    id: Date.now(),
+    desc,
+    cat: getChip('cp-cat-grp') || 'vatlieu',
+    amount,
+    date: document.getElementById('cp-date').value,
+    note: document.getElementById('cp-note').value,
+  });
+  save();
+  closeModal('m-cp');
+  clearFields(['cp-desc','cp-amount','cp-note']);
+  renderAll();
+}
+
+function addTT() {
+  const who = document.getElementById('tt-who').value.trim();
+  const amount = +document.getElementById('tt-amount').value;
+  if (!who || !amount) return alert('Nhập đầy đủ nhà thầu và số tiền');
+  D.tt.push({
+    id: Date.now(),
+    who,
+    desc: document.getElementById('tt-desc').value,
+    amount,
+    date: document.getElementById('tt-date').value,
+    status: getChip('tt-status-grp') || 'daThanhToan',
+    method: document.getElementById('tt-method').value,
+    note: document.getElementById('tt-note').value,
+  });
+  save();
+  closeModal('m-tt');
+  clearFields(['tt-who','tt-desc','tt-amount','tt-note']);
+  renderAll();
+}
+
+function addVT() {
+  const name = document.getElementById('vt-name').value.trim();
+  if (!name) return alert('Nhập tên vật tư');
+  const qty = +document.getElementById('vt-qty').value || 0;
+  const price = +document.getElementById('vt-price').value || 0;
+  D.vt.push({
+    id: Date.now(),
+    name,
+    qty, price,
+    unit: document.getElementById('vt-unit').value,
+    total: qty * price,
+    date: document.getElementById('vt-date').value,
+    supplier: document.getElementById('vt-supplier').value,
+    status: getChip('vt-status-grp') || 'daCoMat',
+    note: document.getElementById('vt-note').value,
+  });
+  save();
+  closeModal('m-vt');
+  clearFields(['vt-name','vt-qty','vt-unit','vt-price','vt-supplier','vt-note']);
+  renderAll();
+}
+
+function delItem(key, id) {
+  if (!confirm('Xóa mục này?')) return;
+  D[key] = D[key].filter(x => x.id !== id);
+  save();
+  renderAll();
+}
+
+function clearFields(ids) {
+  ids.forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+}
+
+// RENDER
+function renderHM() {
+  const el = document.getElementById('hm-list');
+  if (!D.hm.length) { el.innerHTML = '<div class="empty">Chưa có hạng mục nào</div>'; return; }
+  el.innerHTML = D.hm.map(h => `
+    <div class="row">
+      <div class="row-head"><span class="row-name">${h.name}</span>${badge(h.status)}</div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted)"><span>Tiến độ</span><span>${h.progress}%</span></div>
+      ${pbar(h.progress)}
+      <div class="row-meta">
+        ${h.start?`<span>📅 ${h.start}</span>`:''}
+        ${h.end?`<span>🏁 ${h.end}</span>`:''}
+        ${h.budget?`<span>💼 ${fmt(h.budget)}</span>`:''}
+        ${h.sub?`<span>👷 ${h.sub}</span>`:''}
+      </div>
+      ${h.note?`<div style="margin-top:6px;font-size:12px;color:var(--muted);font-style:italic">${h.note}</div>`:''}
+      <div style="margin-top:10px"><button class="del-btn" onclick="delItem('hm',${h.id})">🗑 Xóa</button></div>
+    </div>
+  `).join('');
+}
+
+function renderCP() {
+  const catLabel = { vatlieu:'Vật liệu', nhanCong:'Nhân công', thietBi:'Thiết bị', khac:'Khác' };
+  const barsEl = document.getElementById('cp-bars');
+  const listEl = document.getElementById('cp-list');
+
+  // Bars
+  const totals = {}; let total = 0;
+  D.cp.forEach(c => { totals[c.cat]=(totals[c.cat]||0)+(+c.amount); total+=(+c.amount); });
+  if (!Object.keys(totals).length) {
+    barsEl.innerHTML = '<div style="color:var(--muted);font-size:13px">Chưa có dữ liệu</div>';
+  } else {
+    barsEl.innerHTML = Object.entries(totals).map(([cat,amt]) => {
+      const pct = total ? Math.round(amt/total*100) : 0;
+      return `<div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>${catLabel[cat]||cat}</span><span>${fmt(amt)} (${pct}%)</span></div>
+        ${pbar(pct)}
+      </div>`;
+    }).join('') + `<div class="divider"></div>
+    <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Tổng đã chi</span><strong style="color:var(--red)">${fmt(total)}</strong></div>
+    ${D.proj.budget ? `<div style="display:flex;justify-content:space-between;font-size:13px;margin-top:6px"><span style="color:var(--muted)">Còn lại</span><strong style="color:var(--green)">${fmt(+D.proj.budget - total)}</strong></div>` : ''}`;
+  }
+
+  // List
+  if (!D.cp.length) { listEl.innerHTML = '<div class="empty">Chưa có khoản chi nào</div>'; return; }
+  listEl.innerHTML = [...D.cp].reverse().map(c => `
+    <div class="row" style="display:flex;align-items:center;gap:10px">
+      <div style="flex:1">
+        <div class="row-name">${c.desc}</div>
+        <div class="row-sub">${catLabel[c.cat]||c.cat}${c.date?' · '+c.date:''}</div>
+      </div>
+      <strong style="color:var(--red);font-size:14px">${fmt(c.amount)}</strong>
+      <button class="del-btn" onclick="delItem('cp',${c.id})">✕</button>
+    </div>
+  `).join('');
+}
+
+function renderTT() {
+  const listEl = document.getElementById('tt-list');
+  const sumEl = document.getElementById('tt-sum-card');
+  const ml = { chuyen:'Chuyển khoản', tienMat:'Tiền mặt' };
+
+  if (!D.tt.length) { listEl.innerHTML='<div class="empty">Chưa có đợt thanh toán nào</div>'; sumEl.innerHTML=''; return; }
+
+  listEl.innerHTML = [...D.tt].reverse().map(t => `
+    <div class="row" style="display:flex;align-items:center;gap:10px">
+      <div style="flex:1">
+        <div class="row-name">${t.who}</div>
+        <div class="row-sub">${t.desc||''}${t.date?' · '+t.date:''}</div>
+        <div class="row-sub">${ml[t.method]||''}</div>
+      </div>
+      <div style="text-align:right">${badge(t.status)}<div style="font-weight:700;font-size:14px;margin-top:4px">${fmt(t.amount)}</div></div>
+      <button class="del-btn" onclick="delItem('tt',${t.id})">✕</button>
+    </div>
+  `).join('');
+
+  const daTT = D.tt.filter(t=>t.status==='daThanhToan').reduce((s,t)=>s+(+t.amount),0);
+  const chua = D.tt.filter(t=>t.status!=='daThanhToan').reduce((s,t)=>s+(+t.amount),0);
+  sumEl.innerHTML = `<div class="card" style="margin-top:4px">
+    <div class="card-title">📋 Tổng Kết</div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px"><span style="color:var(--muted)">Đã thanh toán</span><strong style="color:var(--green)">${fmt(daTT)}</strong></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px"><span style="color:var(--muted)">Chưa / còn lại</span><strong style="color:var(--red)">${fmt(chua)}</strong></div>
+    <div class="divider"></div>
+    <div style="display:flex;justify-content:space-between;font-size:13px"><span>Tổng</span><strong>${fmt(daTT+chua)}</strong></div>
+  </div>`;
+}
+
+function renderVT() {
+  const el = document.getElementById('vt-list');
+  if (!D.vt.length) { el.innerHTML='<div class="empty">Chưa có vật tư nào</div>'; return; }
+  el.innerHTML = [...D.vt].reverse().map(v => {
+    const total = (+v.qty||0)*(+v.price||0);
+    return `<div class="row" style="display:flex;align-items:center;gap:10px">
+      <div style="flex:1">
+        <div class="row-name">${v.name}</div>
+        <div class="row-sub">${v.supplier||''}${v.date?' · '+v.date:''}</div>
+        ${v.note?`<div class="row-sub">${v.note}</div>`:''}
+      </div>
+      <div style="text-align:center;font-size:12px;color:var(--muted)">${v.qty?v.qty+' '+v.unit:'–'}</div>
+      <div style="text-align:right">${badge(v.status)}${total?`<div style="font-weight:700;font-size:13px;margin-top:4px">${fmt(total)}</div>`:''}</div>
+      <button class="del-btn" onclick="delItem('vt',${v.id})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function renderSummary() {
+  const totalHM = D.hm.length;
+  const doneHM = D.hm.filter(h=>h.status==='done').length;
+  const avg = totalHM ? Math.round(D.hm.reduce((s,h)=>s+h.progress,0)/totalHM) : 0;
+  const spent = D.cp.reduce((s,c)=>s+(+c.amount),0);
+  const budget = +(D.proj.budget||0);
+
+  document.getElementById('s-prog').textContent = avg+'%';
+  document.getElementById('s-hm').textContent = `${doneHM}/${totalHM}`;
+  document.getElementById('s-spent').textContent = fmt(spent);
+  document.getElementById('s-remain').textContent = budget ? fmt(budget-spent) : '–';
+  document.getElementById('s-pct').textContent = avg+'%';
+  document.getElementById('main-pbar').style.width = avg+'%';
+
+  if (D.proj.start && D.proj.end) {
+    const s=new Date(D.proj.start), e=new Date(D.proj.end), n=new Date();
+    const total=Math.round((e-s)/86400000);
+    const elapsed=Math.max(0,Math.round((n-s)/86400000));
+    const remain=Math.max(0,Math.round((e-n)/86400000));
+    document.getElementById('days-info').textContent = `Đã qua ${elapsed} ngày · Còn lại ${remain} ngày / tổng ${total} ngày`;
+  }
+}
+
+function renderAll() {
+  renderHM(); renderCP(); renderTT(); renderVT(); renderSummary();
+}
+
+// Init
+window.addEventListener('load', () => {
+  // Load project fields
+  if (D.proj.name) { document.getElementById('p-name').value=D.proj.name; updateDisplay(); }
+  if (D.proj.start) document.getElementById('p-start').value=D.proj.start;
+  if (D.proj.end) document.getElementById('p-end').value=D.proj.end;
+  if (D.proj.budget) document.getElementById('p-budget').value=D.proj.budget;
+  if (D.proj.contractor) document.getElementById('p-contractor').value=D.proj.contractor;
+
+  // Set today in modals
+  ['cp-date','tt-date','vt-date','hm-start'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !el.value) el.value = today();
+  });
+
+  // Show install hint on iOS Safari
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone;
+  if (isIOS && !isStandalone) {
+    document.getElementById('install-hint').style.display = 'block';
+  }
+
+  renderAll();
+});
+</script>
+</body>
+</html>
