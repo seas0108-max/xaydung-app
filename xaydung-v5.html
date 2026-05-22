@@ -148,7 +148,7 @@ input[type=range]{padding:0;background:transparent;border:none;margin-bottom:12p
       <div><label>Dự kiến xong</label><input id="p-end" type="date" oninput="spDebounce('end',this.value)"></div>
     </div>
     <div class="grid2">
-      <div><label>Tổng dự toán (đ)</label><input id="p-budget" type="number" placeholder="1000000000" oninput="spDebounce('budget',this.value)"></div>
+      <div><label>Tổng dự toán (đ)</label><input id="p-budget" type="number" placeholder="1000000000" oninput="roundInp(this);spDebounce('budget',this.value)"></div>
       <div><label>Nhà thầu chính</label><input id="p-contractor" type="text" placeholder="Tên nhà thầu" oninput="spDebounce('contractor',this.value)"></div>
     </div>
   </div>
@@ -284,7 +284,7 @@ input[type=range]{padding:0;background:transparent;border:none;margin-bottom:12p
       <div><label>Ngày bắt đầu</label><input id="hm-start" type="date"></div>
       <div><label>Dự kiến xong</label><input id="hm-end" type="date"></div>
     </div>
-    <label>Dự toán (đ)</label><input id="hm-budget" type="number" placeholder="200000000">
+    <label>Dự toán (đ)</label><input id="hm-budget" type="number" placeholder="200000000" oninput="roundInp(this)">
     <label>Nhà thầu phụ</label><input id="hm-sub" type="text" placeholder="Tên đội / công ty">
     <label>Ghi chú</label><textarea id="hm-note" placeholder="Tiến độ, vấn đề phát sinh..."></textarea>
     <button class="btn btn-accent btn-block" onclick="addHM()">Lưu Hạng Mục</button>
@@ -303,7 +303,7 @@ input[type=range]{padding:0;background:transparent;border:none;margin-bottom:12p
       <button class="chip" onclick="pc(this,'cp-sg','thietBi')" data-v="thietBi">Thiết bị</button>
       <button class="chip" onclick="pc(this,'cp-sg','khac')" data-v="khac">Khác</button>
     </div>
-    <label>Số tiền (đ) *</label><input id="cp-amount" type="number" placeholder="50000000">
+    <label>Số tiền (đ) *</label><input id="cp-amount" type="number" placeholder="50000000" oninput="roundInp(this)">
     <label>Ngày chi</label><input id="cp-date" type="date">
     <label>Ghi chú</label><input id="cp-note" type="text" placeholder="Hóa đơn, nhà cung cấp...">
     <button class="btn btn-blue btn-block" onclick="addCP()">Lưu Khoản Chi</button>
@@ -316,7 +316,7 @@ input[type=range]{padding:0;background:transparent;border:none;margin-bottom:12p
     <div class="modal-head"><span class="modal-title">🧾 Đợt Thanh Toán</span><button class="close-btn" onclick="closeM('m-tt')">✕</button></div>
     <label>Nhà thầu *</label><input id="tt-who" type="text" placeholder="Tên nhà thầu">
     <label>Đợt / mô tả</label><input id="tt-desc" type="text" placeholder="VD: Đợt 1 – Hoàn thành móng">
-    <label>Số tiền (đ) *</label><input id="tt-amount" type="number" placeholder="150000000">
+    <label>Số tiền (đ) *</label><input id="tt-amount" type="number" placeholder="150000000" oninput="roundInp(this)">
     <label>Ngày thanh toán</label><input id="tt-date" type="date">
     <label>Trạng thái</label>
     <div class="chip-group" id="tt-sg">
@@ -341,7 +341,7 @@ input[type=range]{padding:0;background:transparent;border:none;margin-bottom:12p
       <div><label>Đơn vị</label><input id="vt-unit" type="text" placeholder="bao, m³..."></div>
     </div>
     <div class="grid2">
-      <div><label>Đơn giá (đ)</label><input id="vt-price" type="number" placeholder="100000"></div>
+      <div><label>Đơn giá (đ)</label><input id="vt-price" type="number" placeholder="100000" oninput="roundInp(this)"></div>
       <div><label>Ngày nhập</label><input id="vt-date" type="date"></div>
     </div>
     <label>Nhà cung cấp</label><input id="vt-supplier" type="text" placeholder="Tên cửa hàng / công ty">
@@ -388,8 +388,8 @@ input[type=range]{padding:0;background:transparent;border:none;margin-bottom:12p
       <div><label>Đơn vị</label><input id="ms-unit" type="text" placeholder="bao, m³, cây..."></div>
     </div>
     <div class="grid2">
-      <div><label>Đơn giá (đ)</label><input id="ms-price" type="number" placeholder="100000" oninput="calcMSTotal()"></div>
-      <div><label>Tổng tiền (đ)</label><input id="ms-total-val" type="number" placeholder="Tự tính"></div>
+      <div><label>Đơn giá (đ)</label><input id="ms-price" type="number" placeholder="100000" oninput="roundInp(this);calcMSTotal()"></div>
+      <div><label>Tổng tiền (đ)</label><input id="ms-total-val" type="number" placeholder="Tự tính" oninput="roundInp(this)"></div>
     </div>
 
     <!-- Autocomplete nhà cung cấp -->
@@ -413,7 +413,7 @@ input[type=range]{padding:0;background:transparent;border:none;margin-bottom:12p
     <select id="ms-method"><option value="chuyen">Chuyển khoản</option><option value="tienMat">Tiền mặt</option><option value="coc">Cọc trước + sau</option></select>
     <div class="sec-lbl">🏦 Nguồn Vốn</div>
     <div class="grid2">
-      <div><label>Số tiền vốn nhận (đ)</label><input id="ms-capital" type="number" placeholder="0"></div>
+      <div><label>Số tiền vốn nhận (đ)</label><input id="ms-capital" type="number" placeholder="0" oninput="roundInp(this)"></div>
       <div><label>Ngày nhận vốn</label><input id="ms-capdate" type="date"></div>
     </div>
     <label>Nguồn vốn từ</label><input id="ms-capsrc" type="text" placeholder="Ngân hàng, đối tác, cá nhân...">
@@ -672,6 +672,7 @@ function openEditMS(id){
   openM('m-ms');
 }
 
+function roundInp(el){if(el.value&&el.value!=='')el.value=Math.round(+el.value);}
 function gv(id){const e=document.getElementById(id);return e?e.value.trim():'';}
 function gn(id){const v=Math.round(+gv(id));return v||null;}
 function gnull(id){const v=gv(id);return v||null;}
