@@ -452,6 +452,7 @@ async function sb(table,method='GET',body=null,query=''){
 
 function fmt(n){n=+n;if(!n)return'–';if(n>=1e9)return(n/1e9).toFixed(2).replace(/\.?0+$/,'')+' tỷ';if(n>=1e6)return(n/1e6).toFixed(1).replace(/\.?0+$/,'')+' tr';return n.toLocaleString('vi-VN')+'đ';}
 function td(){return new Date().toISOString().split('T')[0];}
+function fmtDate(d){if(!d)return'–';const[y,m,dd]=d.split('-');return dd+'/'+m+'/'+y;}
 const ST={todo:{l:'Chưa bắt đầu',c:'#7a8098',b:'#1e2230'},doing:{l:'Đang thi công',c:'#5b8dee',b:'#1a2540'},done:{l:'Hoàn thành',c:'#3ecf8e',b:'#0d2b1f'},pause:{l:'Tạm dừng',c:'#f0a06a',b:'#2b1a0d'},da:{l:'Đã TT',c:'#3ecf8e',b:'#0d2b1f'},chua:{l:'Chưa TT',c:'#7a8098',b:'#1e2230'},ung:{l:'Tạm ứng',c:'#5b8dee',b:'#1a2540'},co:{l:'Đã nhập',c:'#3ecf8e',b:'#0d2b1f'},dat:{l:'Đang đặt',c:'#5b8dee',b:'#1a2540'},can:{l:'Cần mua',c:'#f06a6a',b:'#2a1a1a'}};
 function bdg(s){const c=ST[s]||{l:s,c:'#7a8098',b:'#1e2230'};return`<span class="badge" style="color:${c.c};background:${c.b}">${c.l}</span>`;}
 function pbar(v,over=false){return`<div class="pbar-wrap"><div class="pbar${over?' over':''}" style="width:${Math.min(v,100)}%"></div></div>`;}
@@ -776,7 +777,7 @@ async function saveDuToan(){
 function renderHM(){
   const el=document.getElementById('hm-list');
   if(!D.hm.length){el.innerHTML='<div class="empty">Chưa có hạng mục nào</div>';return;}
-  el.innerHTML=D.hm.map(h=>`<div class="row"><div class="row-head"><span class="row-name">${h.name}</span>${bdg(h.status)}</div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted)"><span>Tiến độ</span><span>${h.progress}%</span></div>${pbar(h.progress)}<div class="row-meta">${h.start_date?`<span>📅 ${h.start_date}</span>`:''} ${h.end_date?`<span>🏁 ${h.end_date}</span>`:''} ${h.budget?`<span>💼 ${fmt(h.budget)}</span>`:''} ${h.sub?`<span>👷 ${h.sub}</span>`:''}</div>${h.note?`<div style="margin-top:6px;font-size:12px;color:var(--muted);font-style:italic">${h.note}</div>`:''}<div style="margin-top:10px"><button class="del-btn" onclick="delItem('hm',${h.id},'hang_muc')">🗑 Xóa</button></div></div>`).join('');
+  el.innerHTML=D.hm.map(h=>`<div class="row"><div class="row-head"><span class="row-name">${h.name}</span>${bdg(h.status)}</div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted)"><span>Tiến độ</span><span>${h.progress}%</span></div>${pbar(h.progress)}<div class="row-meta">${h.start_date?`<span>📅 ${fmtDate(h.start_date)}</span>`:''} ${h.end_date?`<span>🏁 ${fmtDate(h.end_date)}</span>`:''} ${h.budget?`<span>💼 ${fmt(h.budget)}</span>`:''} ${h.sub?`<span>👷 ${h.sub}</span>`:''}</div>${h.note?`<div style="margin-top:6px;font-size:12px;color:var(--muted);font-style:italic">${h.note}</div>`:''}<div style="margin-top:10px"><button class="del-btn" onclick="delItem('hm',${h.id},'hang_muc')">🗑 Xóa</button></div></div>`).join('');
 }
 
 function renderCP(){
@@ -825,13 +826,13 @@ function renderMS(){
     const dots=[o.ordered,o.received,o.capdate,o.spent,o.paid].map(v=>`<div class="dot${v?' ok':''}"></div>`).join('');
     return`<tr onclick="openEditMS(${o.id})" title="Nhấn để chỉnh sửa">
       <td><div class="cell-name">${o.name}</div><div class="cell-sub">${o.supplier||'–'}</div>${o.qty?`<div style="font-size:11px;color:var(--muted)">${o.qty} ${o.unit||''} × ${fmt(o.price)}</div>`:''}</td>
-      <td class="cell-date${o.ordered?' ok':''}">${o.ordered||'–'}</td>
-      <td class="cell-date${o.received?' ok':' warn'}">${o.received||'⏳'}</td>
+      <td class="cell-date${o.ordered?' ok':''}">${fmtDate(o.ordered)}</td>
+      <td class="cell-date${o.received?' ok':' warn'}">${o.received?fmtDate(o.received):'⏳'}</td>
       <td class="cell-amt out">${fmt(o.total)}</td>
-      <td class="cell-date${o.paid?' ok':s==='late'?' bad':' warn'}">${o.paid||(s==='late'?'⚠️ Trễ':'⏳')}${o.method?`<div style="font-size:10px;color:var(--muted)">${ml[o.method]||''}</div>`:''}</td>
+      <td class="cell-date${o.paid?' ok':s==='late'?' bad':' warn'}">${o.paid?fmtDate(o.paid):(s==='late'?'⚠️ Trễ':'⏳')}${o.method?`<div style="font-size:10px;color:var(--muted)">${ml[o.method]||''}</div>`:''}</td>
       <td class="cell-amt inn">${fmt(o.capital)}</td>
-      <td class="cell-date${o.capdate?' ok':''}">${o.capdate||'–'}</td>
-      <td class="cell-date${o.spent?' ok':''}">${o.spent||'–'}</td>
+      <td class="cell-date${o.capdate?' ok':''}">${fmtDate(o.capdate)}</td>
+      <td class="cell-date${o.spent?' ok':''}">${fmtDate(o.spent)}</td>
       <td><div class="dot-row">${dots}</div></td>
       <td><span class="badge" style="color:${sc};background:${sb2}">${sl}</span></td>
     </tr>`;}).join('');
@@ -1048,7 +1049,7 @@ function renderVon(){
       <div class="row-head">
         <div>
           <div class="row-name" style="color:var(--green)">${fmt(v.amount)}</div>
-          <div class="row-sub">${v.src||'–'} ${v.date?' · '+v.date:''}</div>
+          <div class="row-sub">${v.src||'–'} ${v.date?' · '+fmtDate(v.date):''}</div>
         </div>
         <button class="edit-btn" onclick="openEditVon(${v.id})">✏️ Sửa</button>
       </div>
@@ -1176,7 +1177,7 @@ function renderCPPS(){
       ${g.rows.map(o=>`
         <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:var(--surface2);border-radius:8px;margin-bottom:4px;font-size:12px">
           <div>
-            <span style="color:var(--muted)">${o.date||'–'}</span>
+            <span style="color:var(--muted)">${fmtDate(o.date)}</span>
             ${o.note?`<span style="color:var(--muted)"> · ${o.note}</span>`:''}
           </div>
           <div style="display:flex;align-items:center;gap:8px">
