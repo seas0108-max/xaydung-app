@@ -401,17 +401,26 @@ input[type=range]{padding:0;background:transparent;border:none;margin-bottom:12p
       <span class="modal-title" id="cpps-modal-title">💡 Thêm Chi Phí</span>
       <button class="close-btn" onclick="closeM('m-cpps')">✕</button>
     </div>
-    <label>Tên khoản chi *</label>
-    <div class="ac-wrap">
-      <input id="cpps-name" type="text" placeholder="VD: Điện công trường, Nước sinh hoạt..." oninput="showAC('cpps',this.value)" autocomplete="off">
-      <div class="ac-list" id="ac-cpps"></div>
+    <label>Danh mục *</label>
+    <select id="cpps-name" onchange="checkCPPSCustom(this)">
+      <option value="">-- Chọn danh mục --</option>
+      <option value="Điện công trường">⚡ Điện công trường</option>
+      <option value="Nước sinh hoạt">💧 Nước sinh hoạt</option>
+      <option value="Lương nhân công">👷 Lương nhân công</option>
+      <option value="Thuê máy móc">🏗️ Thuê máy móc</option>
+      <option value="Phí vận chuyển">🚛 Phí vận chuyển</option>
+      <option value="Chi phí quản lý">📋 Chi phí quản lý</option>
+      <option value="Bảo hiểm công trình">🛡️ Bảo hiểm công trình</option>
+      <option value="Khác">📦 Khác (tự nhập)</option>
+    </select>
+    <div id="cpps-custom-wrap" style="display:none">
+      <label>Tên khoản chi *</label>
+      <input id="cpps-custom" type="text" placeholder="Nhập tên khoản chi...">
     </div>
     <label>Số tiền (đ) *</label>
     <input id="cpps-amount" type="number" placeholder="500000" oninput="roundInp(this)">
-    <div class="grid2">
-      <div><label>Tháng / Ngày</label><input id="cpps-date" type="date"></div>
-      <div><label>Ghi chú</label><input id="cpps-note" type="text" placeholder="Tháng 5, quý 2..."></div>
-    </div>
+    <label>Ngày</label>
+    <input id="cpps-date" type="date">
     <div style="display:flex;gap:8px;margin-top:4px">
       <button class="btn btn-red btn-sm" id="cpps-del-btn" style="display:none" onclick="deleteCPPS()">🗑 Xóa</button>
       <button class="btn btn-accent btn-block" onclick="saveCPPS()">Lưu Khoản Chi</button>
@@ -537,9 +546,7 @@ function getACList(type){
     DEFAULT_CATS.forEach(c=>s.add(c));
     D.ms.forEach(o=>{if(o.cat)s.add(o.cat);});
   }
-  if(type==='cpps'){
-    getCPPSNames().forEach(c=>s.add(c));
-  }
+
   return[...s];
 }
 function showAC(type,val){
@@ -581,7 +588,7 @@ function selACName(name){
 }
 
 function selAC(inputId,listId,v){document.getElementById(inputId).value=v;document.getElementById(listId).classList.remove('open');}
-document.addEventListener('click',e=>{if(!e.target.closest('.ac-wrap'))['ac-name','ac-supplier','ac-cat','ac-cpps'].forEach(i=>{const el=document.getElementById(i);if(el)el.classList.remove('open');});});
+document.addEventListener('click',e=>{if(!e.target.closest('.ac-wrap'))['ac-name','ac-supplier','ac-cat'].forEach(i=>{const el=document.getElementById(i);if(el)el.classList.remove('open');});});
 
 // ADD HM
 async function addHM(){
@@ -1067,14 +1074,21 @@ function getCPPSNames(){
   return[...s];
 }
 
+function checkCPPSCustom(sel){
+  const wrap=document.getElementById('cpps-custom-wrap');
+  wrap.style.display=sel.value==='Khác'?'block':'none';
+  if(sel.value!=='Khác')document.getElementById('cpps-custom').value='';
+}
+
 function openAddCPPS(){
   editingCPPSId=null;
   document.getElementById('cpps-modal-title').textContent='💡 Thêm Chi Phí';
   document.getElementById('cpps-del-btn').style.display='none';
   document.getElementById('cpps-name').value='';
+  document.getElementById('cpps-custom').value='';
+  document.getElementById('cpps-custom-wrap').style.display='none';
   document.getElementById('cpps-amount').value='';
   document.getElementById('cpps-date').value=td();
-  document.getElementById('cpps-note').value='';
   openM('m-cpps');
 }
 
@@ -1083,16 +1097,26 @@ function openEditCPPS(id){
   editingCPPSId=id;
   document.getElementById('cpps-modal-title').textContent='✏️ Chỉnh Sửa Chi Phí';
   document.getElementById('cpps-del-btn').style.display='inline-flex';
-  document.getElementById('cpps-name').value=o.name||'';
+  // Check if name is in default list
+  const sel=document.getElementById('cpps-name');
+  const opts=[...sel.options].map(o=>o.value);
+  if(opts.includes(o.name)){
+    sel.value=o.name;
+    document.getElementById('cpps-custom-wrap').style.display='none';
+  } else {
+    sel.value='Khác';
+    document.getElementById('cpps-custom-wrap').style.display='block';
+    document.getElementById('cpps-custom').value=o.name||'';
+  }
   document.getElementById('cpps-amount').value=o.amount||'';
   document.getElementById('cpps-date').value=o.date||'';
-  document.getElementById('cpps-note').value=o.note||'';
   openM('m-cpps');
 }
 
 async function saveCPPS(){
-  const name=gv('cpps-name');
-  if(!name)return alert('Nhập tên khoản chi');
+  const sel=document.getElementById('cpps-name').value;
+  const name=sel==='Khác'?gv('cpps-custom'):sel;
+  if(!name)return alert('Chọn danh mục');
   const amount=Math.round(+gv('cpps-amount'))||0;
   if(!amount)return alert('Nhập số tiền');
   const obj={name,amount,date:gnull('cpps-date'),note:gnull('cpps-note')};
