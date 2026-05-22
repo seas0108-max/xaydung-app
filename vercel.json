@@ -1,5 +1,5 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/xaydung-v2.html" }
+    { "source": "/", "destination": "/xaydung-v3.html" }
   ]
 }
