@@ -129,9 +129,6 @@ input[type=range]{padding:0;background:transparent;border:none;margin-bottom:12p
 <div class="tabs">
   <button class="tab active" onclick="switchTab('tongQuan',this)">📊 Tổng Quan</button>
   <button class="tab" onclick="switchTab('hangMuc',this)">🏗️ Hạng Mục</button>
-  <button class="tab" onclick="switchTab('chiPhi',this)">💰 Chi Phí</button>
-  <button class="tab" onclick="switchTab('thanhToan',this)">🧾 Thanh Toán</button>
-  <button class="tab" onclick="switchTab('vatTu',this)">🧱 Vật Tư</button>
   <button class="tab" onclick="switchTab('muaSam',this)">🛒 Mua Sắm</button>
   <button class="tab" onclick="switchTab('tongHop',this)">📈 Tổng Hợp</button>
   <button class="tab" onclick="switchTab('von',this)">💵 Vốn</button>
@@ -175,38 +172,6 @@ input[type=range]{padding:0;background:transparent;border:none;margin-bottom:12p
     <button class="btn btn-accent" style="padding:8px 14px;font-size:13px" onclick="openM('m-hm')">+ Thêm</button>
   </div>
   <div id="hm-list"><div class="empty">Đang tải...</div></div>
-</div>
-
-<!-- CHI PHÍ -->
-<div id="chiPhi" class="section">
-  <div class="card">
-    <div class="card-title">📊 Phân Bổ Chi Phí</div>
-    <div id="cp-bars"><div style="color:var(--muted);font-size:13px">Chưa có dữ liệu</div></div>
-  </div>
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <span style="font-weight:700">Khoản Chi</span>
-    <button class="btn btn-blue" style="padding:8px 14px;font-size:13px" onclick="openM('m-cp')">+ Ghi Chi</button>
-  </div>
-  <div id="cp-list"><div class="empty">Đang tải...</div></div>
-</div>
-
-<!-- THANH TOÁN -->
-<div id="thanhToan" class="section">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <span style="font-weight:700">Đợt Thanh Toán Nhà Thầu</span>
-    <button class="btn btn-accent" style="padding:8px 14px;font-size:13px" onclick="openM('m-tt')">+ Thêm</button>
-  </div>
-  <div id="tt-list"><div class="empty">Đang tải...</div></div>
-  <div id="tt-sum"></div>
-</div>
-
-<!-- VẬT TƯ -->
-<div id="vatTu" class="section">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <span style="font-weight:700">Vật Tư & Vật Liệu</span>
-    <button class="btn btn-accent" style="padding:8px 14px;font-size:13px" onclick="openM('m-vt')">+ Thêm</button>
-  </div>
-  <div id="vt-list"><div class="empty">Đang tải...</div></div>
 </div>
 
 <!-- MUA SẮM -->
@@ -313,69 +278,13 @@ input[type=range]{padding:0;background:transparent;border:none;margin-bottom:12p
 </div>
 
 <!-- MODAL: Chi Phí -->
-<div class="overlay" id="m-cp" onclick="bgClose(event,'m-cp')">
-  <div class="modal">
-    <div class="modal-head"><span class="modal-title">💰 Ghi Khoản Chi</span><button class="close-btn" onclick="closeM('m-cp')">✕</button></div>
-    <label>Mô tả *</label><input id="cp-desc" type="text" placeholder="VD: Mua sắt thép, Nhân công...">
-    <label>Danh mục</label>
-    <div class="chip-group" id="cp-sg">
-      <button class="chip on" onclick="pc(this,'cp-sg','vatlieu')" data-v="vatlieu">Vật liệu</button>
-      <button class="chip" onclick="pc(this,'cp-sg','nhanCong')" data-v="nhanCong">Nhân công</button>
-      <button class="chip" onclick="pc(this,'cp-sg','thietBi')" data-v="thietBi">Thiết bị</button>
-      <button class="chip" onclick="pc(this,'cp-sg','khac')" data-v="khac">Khác</button>
-    </div>
-    <label>Số tiền (đ) *</label><input id="cp-amount" type="number" placeholder="50000000" oninput="roundInp(this)">
-    <label>Ngày chi</label><input id="cp-date" type="date">
-    <label>Ghi chú</label><input id="cp-note" type="text" placeholder="Hóa đơn, nhà cung cấp...">
-    <button class="btn btn-blue btn-block" onclick="addCP()">Lưu Khoản Chi</button>
-  </div>
-</div>
+
 
 <!-- MODAL: Thanh Toán -->
-<div class="overlay" id="m-tt" onclick="bgClose(event,'m-tt')">
-  <div class="modal">
-    <div class="modal-head"><span class="modal-title">🧾 Đợt Thanh Toán</span><button class="close-btn" onclick="closeM('m-tt')">✕</button></div>
-    <label>Nhà thầu *</label><input id="tt-who" type="text" placeholder="Tên nhà thầu">
-    <label>Đợt / mô tả</label><input id="tt-desc" type="text" placeholder="VD: Đợt 1 – Hoàn thành móng">
-    <label>Số tiền (đ) *</label><input id="tt-amount" type="number" placeholder="150000000" oninput="roundInp(this)">
-    <label>Ngày thanh toán</label><input id="tt-date" type="date">
-    <label>Trạng thái</label>
-    <div class="chip-group" id="tt-sg">
-      <button class="chip" onclick="pc(this,'tt-sg','chua')" data-v="chua">Chưa TT</button>
-      <button class="chip on" onclick="pc(this,'tt-sg','da')" data-v="da">Đã TT</button>
-      <button class="chip" onclick="pc(this,'tt-sg','ung')" data-v="ung">Tạm ứng</button>
-    </div>
-    <label>Hình thức</label>
-    <select id="tt-method"><option value="chuyen">Chuyển khoản</option><option value="tienMat">Tiền mặt</option></select>
-    <label>Ghi chú</label><input id="tt-note" type="text" placeholder="Số HĐ, biên bản nghiệm thu...">
-    <button class="btn btn-accent btn-block" onclick="addTT()">Lưu Đợt Thanh Toán</button>
-  </div>
-</div>
+
 
 <!-- MODAL: Vật Tư -->
-<div class="overlay" id="m-vt" onclick="bgClose(event,'m-vt')">
-  <div class="modal">
-    <div class="modal-head"><span class="modal-title">🧱 Thêm Vật Tư</span><button class="close-btn" onclick="closeM('m-vt')">✕</button></div>
-    <label>Tên vật tư *</label><input id="vt-name" type="text" placeholder="VD: Xi măng, Cát, Sắt phi 16...">
-    <div class="grid2">
-      <div><label>Số lượng</label><input id="vt-qty" type="number" placeholder="100"></div>
-      <div><label>Đơn vị</label><input id="vt-unit" type="text" placeholder="bao, m³..."></div>
-    </div>
-    <div class="grid2">
-      <div><label>Đơn giá (đ)</label><input id="vt-price" type="number" placeholder="100000" oninput="roundInp(this)"></div>
-      <div><label>Ngày nhập</label><input id="vt-date" type="date"></div>
-    </div>
-    <label>Nhà cung cấp</label><input id="vt-supplier" type="text" placeholder="Tên cửa hàng / công ty">
-    <label>Trạng thái</label>
-    <div class="chip-group" id="vt-sg">
-      <button class="chip on" onclick="pc(this,'vt-sg','co')" data-v="co">Đã nhập kho</button>
-      <button class="chip" onclick="pc(this,'vt-sg','dat')" data-v="dat">Đang đặt</button>
-      <button class="chip" onclick="pc(this,'vt-sg','can')" data-v="can">Cần mua</button>
-    </div>
-    <label>Ghi chú</label><input id="vt-note" type="text" placeholder="Quy cách, tiêu chuẩn...">
-    <button class="btn btn-accent btn-block" onclick="addVT()">Lưu Vật Tư</button>
-  </div>
-</div>
+
 
 <!-- MODAL: Mua Sắm -->
 <div class="overlay" id="m-ms" onclick="bgClose(event,'m-ms')">
@@ -540,7 +449,7 @@ async function syncAll(){
       sb('project_info','GET',null,'?order=id.asc'),
       sb('von_von','GET',null,'?order=id.asc').catch(()=>[]),
     ]);
-    D.hm=hm||[];D.cp=cp||[];D.tt=tt||[];D.vt=vt||[];D.ms=ms||[];D.von=von||[];
+    D.hm=hm||[];D.cp=cp||[];D.tt=tt||[];D.vt=vt||[];D.ms=ms||[];D.von=von||[]; // cp,tt,vt kept for summary
     D.proj={};(proj||[]).forEach(p=>D.proj[p.key]=p.value);
     loadProjFields();renderAll();
     setSyncBtn('ok');showToast('✓ Đã đồng bộ dữ liệu');
@@ -986,7 +895,7 @@ function renderSum(){
   }
 }
 
-function renderAll(){renderHM();renderCP();renderTT();renderVT();renderMS();renderTongHop();renderVon();renderSum();}
+function renderAll(){renderHM();renderMS();renderTongHop();renderVon();renderSum();}
 
 let editingVonId=null;
 
