@@ -483,7 +483,17 @@ async function sb(table,method='GET',body=null,query=''){
   return text?JSON.parse(text):[];
 }
 
-function fmt(n){n=+n;if(!n)return'–';if(n>=1e9)return(n/1e9).toFixed(2).replace(/\.?0+$/,'')+' tỷ';if(n>=1e6)return(n/1e6).toFixed(1).replace(/\.?0+$/,'')+' tr';return n.toLocaleString('vi-VN')+'đ';}
+function fmt(n){
+  n=+n;if(!n&&n!==0)return'–';
+  if(n===0)return'0đ';
+  return n.toLocaleString('vi-VN')+'đ';
+}
+function fmtShort(n){
+  n=+n;if(!n)return'–';
+  if(n>=1e9)return(n/1e9).toFixed(2).replace(/\.?0+$/,'')+' tỷ';
+  if(n>=1e6)return(n/1e6).toFixed(1).replace(/\.?0+$/,'')+' tr';
+  return n.toLocaleString('vi-VN')+'đ';
+}
 function td(){return new Date().toISOString().split('T')[0];}
 function fmtDate(d){if(!d)return'–';const[y,m,dd]=d.split('-');return dd+'/'+m+'/'+y;}
 const ST={todo:{l:'Chưa bắt đầu',c:'#7a8098',b:'#1e2230'},doing:{l:'Đang thi công',c:'#5b8dee',b:'#1a2540'},done:{l:'Hoàn thành',c:'#3ecf8e',b:'#0d2b1f'},pause:{l:'Tạm dừng',c:'#f0a06a',b:'#2b1a0d'},da:{l:'Đã TT',c:'#3ecf8e',b:'#0d2b1f'},chua:{l:'Chưa TT',c:'#7a8098',b:'#1e2230'},ung:{l:'Tạm ứng',c:'#5b8dee',b:'#1a2540'},co:{l:'Đã nhập',c:'#3ecf8e',b:'#0d2b1f'},dat:{l:'Đang đặt',c:'#5b8dee',b:'#1a2540'},can:{l:'Cần mua',c:'#f06a6a',b:'#2a1a1a'}};
@@ -846,8 +856,8 @@ function renderMS(){
   const totalVon=D.ms.reduce((s,o)=>s+(+o.capital||0),0);
   const net=totalVon-totalChi;
   document.getElementById('ms-cnt').textContent=D.ms.length;
-  document.getElementById('ms-chi').textContent=fmt(totalChi);
-  document.getElementById('ms-von').textContent=fmt(totalVon);
+  document.getElementById('ms-chi').textContent=fmtShort(totalChi);
+  document.getElementById('ms-von').textContent=fmtShort(totalVon);
   const ne=document.getElementById('ms-net');
   ne.textContent=fmt(Math.abs(net));ne.style.color=net>=0?'var(--green)':'var(--red)';
   const tbody=document.getElementById('ms-body');
@@ -966,8 +976,8 @@ function renderSum(){
   const spent=D.cp.reduce((s,c)=>s+(+c.amount),0);const budget=+(D.proj.budget||0);
   document.getElementById('s-prog').textContent=avg+'%';
   document.getElementById('s-hm').textContent=`${done}/${tot}`;
-  document.getElementById('s-spent').textContent=fmt(spent);
-  document.getElementById('s-remain').textContent=budget?fmt(budget-spent):'–';
+  document.getElementById('s-spent').textContent=fmtShort(spent);
+  document.getElementById('s-remain').textContent=budget?fmtShort(budget-spent):'–';
   document.getElementById('s-pct').textContent=avg+'%';
   document.getElementById('main-pbar').style.width=avg+'%';
   if(D.proj.start&&D.proj.end){
@@ -1207,10 +1217,10 @@ function renderCPPS(){
   const e2=document.getElementById('cps-count');
   const e3=document.getElementById('cps-ms');
   const e4=document.getElementById('cps-total-chi');
-  if(e1)e1.textContent=fmt(tongCPPS);
+  if(e1)e1.textContent=fmtShort(tongCPPS);
   if(e2)e2.textContent=D.cpps.length;
-  if(e3)e3.textContent=fmt(tongMuaSam);
-  if(e4)e4.textContent=fmt(tongChi);
+  if(e3)e3.textContent=fmtShort(tongMuaSam);
+  if(e4)e4.textContent=fmtShort(tongChi);
 
   // Overview bar
   const ov=document.getElementById('cps-overview');
