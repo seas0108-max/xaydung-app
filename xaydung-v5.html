@@ -633,7 +633,7 @@ async function addVT(){
 }
 
 // MS
-function calcMSTotal(){const q=+document.getElementById('ms-qty').value||0;const p=+document.getElementById('ms-price').value||0;if(q&&p)document.getElementById('ms-total-val').value=q*p;}
+function calcMSTotal(){const q=+document.getElementById('ms-qty').value||0;const p=+document.getElementById('ms-price').value||0;if(q&&p)document.getElementById('ms-total-val').value=Math.round(q*p);}
 
 function openAddMS(){
   editingId=null;
@@ -673,7 +673,7 @@ function openEditMS(id){
 }
 
 function gv(id){const e=document.getElementById(id);return e?e.value.trim():'';}
-function gn(id){const v=+gv(id);return v||null;}
+function gn(id){const v=Math.round(+gv(id));return v||null;}
 function gnull(id){const v=gv(id);return v||null;}
 
 async function saveMS(){
@@ -682,7 +682,7 @@ async function saveMS(){
   const qty=gn('ms-qty');
   const price=gn('ms-price');
   const totalInput=gn('ms-total-val');
-  const total=totalInput||(qty&&price?qty*price:null);
+  const total=totalInput||(qty&&price?Math.round(qty*price):null);
   const obj={
     name,
     cat:gv('ms-cat')||'vatLieuTho',
