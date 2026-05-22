@@ -193,6 +193,13 @@ input[type=range]{padding:0;background:transparent;border:none;margin-bottom:12p
     <div class="sum-box"><div class="sum-lbl">Vốn Nhận</div><div class="sum-val" id="ms-von" style="color:var(--green)">–</div></div>
     <div class="sum-box"><div class="sum-lbl">Chênh Lệch</div><div class="sum-val" id="ms-net">–</div></div>
   </div>
+  <div style="background:#2a1a1a;border:1px solid #f06a6a44;border-radius:10px;padding:12px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <div style="font-size:10px;color:var(--red);font-weight:700;text-transform:uppercase;letter-spacing:.8px">⚠️ Chưa Thanh Toán</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px" id="ms-chua-tt-count">0 đơn chưa TT</div>
+    </div>
+    <div style="font-size:22px;font-weight:700;color:var(--red)" id="ms-chua-tt">–</div>
+  </div>
   <div class="filter-row">
     <button class="fchip on" onclick="setMSFilter('all',this)">Tất cả</button>
     <button class="fchip" onclick="setMSFilter('ordered',this)">Đã đặt</button>
@@ -855,9 +862,15 @@ function renderMS(){
   const totalChi=D.ms.reduce((s,o)=>s+(+o.total||0),0);
   const totalVon=D.ms.reduce((s,o)=>s+(+o.capital||0),0);
   const net=totalVon-totalChi;
+  const chuaTT=filtered.filter(o=>!o.paid);
+  const tongChuaTT=chuaTT.reduce((s,o)=>s+(+o.total||0),0);
   document.getElementById('ms-cnt').textContent=D.ms.length;
   document.getElementById('ms-chi').textContent=fmtShort(totalChi);
   document.getElementById('ms-von').textContent=fmtShort(totalVon);
+  const chuaTTEl=document.getElementById('ms-chua-tt');
+  const chuaTTCount=document.getElementById('ms-chua-tt-count');
+  if(chuaTTEl)chuaTTEl.textContent=fmt(tongChuaTT);
+  if(chuaTTCount)chuaTTCount.textContent=chuaTT.length+' đơn chưa TT';
   const ne=document.getElementById('ms-net');
   ne.textContent=fmt(Math.abs(net));ne.style.color=net>=0?'var(--green)':'var(--red)';
   const tbody=document.getElementById('ms-body');
