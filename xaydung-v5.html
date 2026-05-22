@@ -926,7 +926,7 @@ function renderTongHop(){
       const k=o.name;
       if(!byName[k])byName[k]={name:k,unit:o.unit,rows:[],totalQty:0,totalAmt:0};
       byName[k].rows.push(o);
-      byName[k].totalQty+=(+o.qty||0);
+      byName[k].totalQty=Math.round((byName[k].totalQty+(+o.qty||0))*1000)/1000;
       byName[k].totalAmt+=(+o.total||0);
     });
 
@@ -951,7 +951,7 @@ function renderTongHop(){
         <tbody>
           ${Object.values(byName).map(n=>`<tr>
             <td><strong>${n.name}</strong></td>
-            <td style="text-align:right;color:var(--muted)">${n.totalQty?n.totalQty+' '+(n.unit||''):'–'}</td>
+            <td style="text-align:right;color:var(--muted)">${n.totalQty?(+n.totalQty.toFixed(2))+' '+(n.unit||''):'–'}</td>
             <td style="text-align:right;font-weight:700;color:var(--red)">${fmt(n.totalAmt)}</td>
             <td style="color:var(--muted);font-size:12px">${[...new Set(n.rows.map(r=>r.supplier).filter(Boolean))].join(', ')||'–'}</td>
             <td style="color:var(--muted)">${n.rows.length} đơn</td>
