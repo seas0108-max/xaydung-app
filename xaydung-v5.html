@@ -544,10 +544,38 @@ function showAC(type,val){
   if(!val){list.classList.remove('open');return;}
   const m=getACList(type).filter(s=>s.toLowerCase().includes(val.toLowerCase()));
   if(!m.length){list.classList.remove('open');return;}
-  const inputId=type==='name'?'ms-name':'ms-supplier';
-  list.innerHTML=m.map(s=>`<div class="ac-item" onclick="selAC('${inputId}','${listId}','${s.replace(/'/g,"\\'")}')">${s}</div>`).join('');
+  if(type==='name'){
+    // Hiển thị tên + đơn giá gần nhất
+    list.innerHTML=m.map(s=>{
+      const last=[...D.ms].reverse().find(o=>o.name===s);
+      const hint=last?`<span style="color:var(--muted);font-size:11px;margin-left:6px">${last.unit||''} · ${last.price?last.price.toLocaleString('vi-VN')+'đ/'+last.unit:''} · ${last.supplier||''}</span>`:'';
+      return`<div class="ac-item" onclick="selACName('${s.replace(/'/g,"\\'")}')"><span style="font-weight:600">${s}</span>${hint}</div>`;
+    }).join('');
+  } else {
+    list.innerHTML=m.map(s=>`<div class="ac-item" onclick="selAC('ms-supplier','ac-supplier','${s.replace(/'/g,"\\'")}')">${s}</div>`).join('');
+  }
   list.classList.add('open');
 }
+
+function selACName(name){
+  // Tìm lần nhập gần nhất của vật liệu này
+  const last=[...D.ms].reverse().find(o=>o.name===name);
+  document.getElementById('ms-name').value=name;
+  document.getElementById('ac-name').classList.remove('open');
+  if(last){
+    // Tự điền các trường từ lần nhập trước
+    if(last.unit) document.getElementById('ms-unit').value=last.unit;
+    if(last.price) document.getElementById('ms-price').value=last.price;
+    if(last.supplier) document.getElementById('ms-supplier').value=last.supplier;
+    if(last.cat) document.getElementById('ms-cat').value=last.cat;
+    if(last.method) document.getElementById('ms-method').value=last.method;
+    // Tính lại tổng nếu đã có qty
+    const qty=+document.getElementById('ms-qty').value||0;
+    if(qty&&last.price) document.getElementById('ms-total-val').value=qty*last.price;
+    showToast('✓ Đã điền thông tin từ lần nhập trước');
+  }
+}
+
 function selAC(inputId,listId,v){document.getElementById(inputId).value=v;document.getElementById(listId).classList.remove('open');}
 document.addEventListener('click',e=>{if(!e.target.closest('.ac-wrap'))['ac-name','ac-supplier'].forEach(i=>{const el=document.getElementById(i);if(el)el.classList.remove('open');});});
 
