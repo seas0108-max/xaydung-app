@@ -452,11 +452,18 @@ let projDebounce=null;
 
 async function sb(table,method='GET',body=null,query=''){
   const url=`${SUPA_URL}/rest/v1/${table}${query}`;
-  const opts={method,headers:{...H,'Prefer':method==='POST'?'return=representation':''}};
+  const prefer=method==='POST'?'return=representation':method==='PATCH'?'return=representation':'';
+  const opts={method,headers:{...H,'Prefer':prefer}};
   if(body)opts.body=JSON.stringify(body);
   const r=await fetch(url,opts);
-  if(!r.ok){const e=await r.text();throw new Error(e);}
-  return method==='DELETE'?null:r.json();
+  if(!r.ok){
+    const e=await r.text();
+    console.error(`SB ERROR [${method} ${table}]:`,e);
+    throw new Error(e);
+  }
+  if(method==='DELETE')return null;
+  const text=await r.text();
+  return text?JSON.parse(text):[];
 }
 
 function fmt(n){n=+n;if(!n)return'–';if(n>=1e9)return(n/1e9).toFixed(2).replace(/\.?0+$/,'')+' tỷ';if(n>=1e6)return(n/1e6).toFixed(1).replace(/\.?0+$/,'')+' tr';return n.toLocaleString('vi-VN')+'đ';}
@@ -665,25 +672,52 @@ function openEditMS(id){
   openM('m-ms');
 }
 
+function gv(id){const e=document.getElementById(id);return e?e.value.trim():'';}
+function gn(id){const v=+gv(id);return v||null;}
+function gnull(id){const v=gv(id);return v||null;}
+
 async function saveMS(){
-  const name=document.getElementById('ms-name').value.trim();
+  const name=gv('ms-name');
   if(!name)return alert('Nhập tên vật liệu');
-  const qty=+document.getElementById('ms-qty').value||0;
-  const price=+document.getElementById('ms-price').value||0;
-  const total=+document.getElementById('ms-total-val').value||qty*price||0;
-  const obj={name,cat:document.getElementById('ms-cat').value,qty,price,total,unit:document.getElementById('ms-unit').value,supplier:document.getElementById('ms-supplier').value,ordered:document.getElementById('ms-ordered').value,received:document.getElementById('ms-received').value,paid:document.getElementById('ms-paid').value,spent:document.getElementById('ms-spent').value,method:document.getElementById('ms-method').value,capital:+document.getElementById('ms-capital').value||0,capdate:document.getElementById('ms-capdate').value,capsrc:document.getElementById('ms-capsrc').value,note:document.getElementById('ms-note').value};
+  const qty=gn('ms-qty');
+  const price=gn('ms-price');
+  const totalInput=gn('ms-total-val');
+  const total=totalInput||(qty&&price?qty*price:null);
+  const obj={
+    name,
+    cat:gv('ms-cat')||'vatLieuTho',
+    qty,price,total,
+    unit:gnull('ms-unit'),
+    supplier:gnull('ms-supplier'),
+    ordered:gnull('ms-ordered'),
+    received:gnull('ms-received'),
+    paid:gnull('ms-paid'),
+    spent:gnull('ms-spent'),
+    method:gv('ms-method')||'chuyen',
+    capital:gn('ms-capital'),
+    capdate:gnull('ms-capdate'),
+    capsrc:gnull('ms-capsrc'),
+    note:gnull('ms-note'),
+  };
   try{
     if(editingId){
-      await sb('mua_sam','PATCH',obj,`?id=eq.${editingId}`);
+      await sb('mua_sam','PATCH',obj,'?id=eq.'+editingId);
       const idx=D.ms.findIndex(x=>x.id===editingId);
       if(idx!==-1)D.ms[idx]={...D.ms[idx],...obj};
       showToast('✓ Đã cập nhật đơn hàng');
     }else{
-      const r=await sb('mua_sam','POST',obj);D.ms.push(r[0]);
+      const r=await sb('mua_sam','POST',obj);
+      if(r&&r[0])D.ms.push(r[0]);
       showToast('✓ Đã lưu đơn hàng');
     }
     closeM('m-ms');renderAll();
-  }catch(e){showToast('✗ Lỗi lưu dữ liệu',false);}
+  }catch(e){
+    console.error('saveMS error:',e);
+    let msg = e.message||'Lỗi không xác định';
+    try{ const j=JSON.parse(e.message); msg=j.message||j.details||j.hint||msg; }catch{}
+    alert('Chi tiết lỗi: '+msg);
+    showToast('✗ Lỗi lưu dữ liệu',false);
+  }
 }
 
 async function deleteMSFromModal(){
