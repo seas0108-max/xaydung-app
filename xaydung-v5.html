@@ -128,7 +128,6 @@ input[type=range]{padding:0;background:transparent;border:none;margin-bottom:12p
 
 <div class="tabs">
   <button class="tab active" onclick="switchTab('tongQuan',this)">📊 Tổng Quan</button>
-  <button class="tab" onclick="switchTab('hangMuc',this)">🏗️ Hạng Mục</button>
   <button class="tab" onclick="switchTab('muaSam',this)">🛒 Mua Sắm</button>
   <button class="tab" onclick="switchTab('tongHop',this)">📈 Tổng Hợp</button>
   <button class="tab" onclick="switchTab('von',this)">💵 Vốn</button>
@@ -176,14 +175,29 @@ input[type=range]{padding:0;background:transparent;border:none;margin-bottom:12p
   </div>
 </div>
 
-<!-- HẠNG MỤC -->
-<div id="hangMuc" class="section">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <span style="font-weight:700">Hạng Mục Thi Công</span>
-    <button class="btn btn-accent" style="padding:8px 14px;font-size:13px" onclick="openM('m-hm')">+ Thêm</button>
+
+
+<!-- CHI PHÍ PHÁT SINH TAB -->
+<div id="chiPhatSinh" class="section">
+  <div class="sum-grid">
+    <div class="sum-box"><div class="sum-lbl">Tổng Chi PS</div><div class="sum-val" id="cps-tong" style="color:var(--orange)">–</div></div>
+    <div class="sum-box"><div class="sum-lbl">Số Khoản</div><div class="sum-val" id="cps-count" style="color:var(--blue)">0</div></div>
+    <div class="sum-box"><div class="sum-lbl">Mua Sắm VL</div><div class="sum-val" id="cps-ms" style="color:var(--red)">–</div></div>
+    <div class="sum-box"><div class="sum-lbl">Tổng Đã Chi</div><div class="sum-val" id="cps-total-chi" style="color:var(--red)">–</div></div>
   </div>
-  <div id="hm-list"><div class="empty">Đang tải...</div></div>
+
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-title">📊 Tổng Chi / Vốn</div>
+    <div id="cps-overview"></div>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <span style="font-weight:700">Danh Sách Chi Phí Phát Sinh</span>
+    <button class="btn btn-accent btn-sm" onclick="openAddCPPS()">+ Thêm</button>
+  </div>
+  <div id="cps-list"><div class="empty">Chưa có khoản chi nào</div></div>
 </div>
+
 
 <!-- MUA SẮM -->
 <div id="muaSam" class="section">
@@ -191,8 +205,9 @@ input[type=range]{padding:0;background:transparent;border:none;margin-bottom:12p
     <div class="sum-box"><div class="sum-lbl">Tổng Đơn</div><div class="sum-val" id="ms-cnt" style="color:var(--blue)">0</div></div>
     <div class="sum-box"><div class="sum-lbl">Tổng Chi</div><div class="sum-val" id="ms-chi" style="color:var(--red)">–</div></div>
     <div class="sum-box"><div class="sum-lbl">Vốn Nhận</div><div class="sum-val" id="ms-von" style="color:var(--green)">–</div></div>
-    <div class="sum-box"><div class="sum-lbl">Chênh Lệch</div><div class="sum-val" id="ms-net">–</div></div>
+    <div class="sum-box"><div class="sum-lbl">Còn Lại</div><div class="sum-val" id="ms-net">–</div></div>
   </div>
+
   <div style="background:#2a1a1a;border:1px solid #f06a6a44;border-radius:10px;padding:12px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
     <div>
       <div style="font-size:10px;color:var(--red);font-weight:700;text-transform:uppercase;letter-spacing:.8px">⚠️ Chưa Thanh Toán</div>
@@ -200,6 +215,31 @@ input[type=range]{padding:0;background:transparent;border:none;margin-bottom:12p
     </div>
     <div style="font-size:22px;font-weight:700;color:var(--red)" id="ms-chua-tt">–</div>
   </div>
+
+  <!-- NHẬP VỐN NHANH -->
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-title">💵 Vốn Nhận</div>
+    <div id="ms-von-summary" style="margin-bottom:10px"></div>
+    <div style="display:flex;gap:8px;align-items:flex-end">
+      <div style="flex:1">
+        <label>Số tiền vốn (đ)</label>
+        <input id="ms-von-amount" type="number" placeholder="50,000,000" oninput="roundInp(this)" style="margin-bottom:0">
+      </div>
+      <div style="flex:1">
+        <label>Ngày nhận</label>
+        <input id="ms-von-date" type="date" style="margin-bottom:0">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <div style="flex:1">
+        <label>Nguồn vốn</label>
+        <input id="ms-von-src" type="text" placeholder="Ngân hàng, đối tác..." style="margin-bottom:0">
+      </div>
+      <button class="btn btn-accent" style="flex-shrink:0;align-self:flex-end;padding:10px 16px" onclick="quickAddVon()">+ Thêm</button>
+    </div>
+    <div id="ms-von-list" style="margin-top:12px"></div>
+  </div>
+
   <div class="filter-row">
     <button class="fchip on" onclick="setMSFilter('all',this)">Tất cả</button>
     <button class="fchip" onclick="setMSFilter('ordered',this)">Đã đặt</button>
@@ -208,6 +248,7 @@ input[type=range]{padding:0;background:transparent;border:none;margin-bottom:12p
     <button class="fchip" onclick="setMSFilter('pending',this)">Chưa TT</button>
     <button class="fchip" onclick="setMSFilter('late',this)">Trễ hạn</button>
   </div>
+
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
     <span style="font-weight:700">Đơn Hàng Vật Liệu</span>
     <div style="display:flex;gap:8px">
@@ -236,85 +277,10 @@ input[type=range]{padding:0;background:transparent;border:none;margin-bottom:12p
   </div>
 </div>
 
-<!-- TỔNG HỢP -->
-<div id="tongHop" class="section">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <span style="font-weight:700">Tổng Hợp Theo Danh Mục</span>
-    <button class="btn btn-ghost btn-sm" onclick="openM('m-dt')">+ Dự Toán</button>
-  </div>
-  <div class="card" style="margin-bottom:12px">
-    <div class="card-title">📊 Tổng Quan Ngân Sách</div>
-    <div id="th-overview"></div>
-  </div>
-  <div id="th-content"><div class="empty">Đang tải...</div></div>
-</div>
-
-<!-- VỐN -->
-<div id="von" class="section">
-  <div class="sum-grid">
-    <div class="sum-box"><div class="sum-lbl">Tổng Vốn Nhận</div><div class="sum-val" id="von-tong" style="color:var(--green)">–</div></div>
-    <div class="sum-box"><div class="sum-lbl">Tổng Đã Chi</div><div class="sum-val" id="von-chi" style="color:var(--red)">–</div></div>
-    <div class="sum-box"><div class="sum-lbl">Còn Lại / Thiếu</div><div class="sum-val" id="von-con">–</div></div>
-    <div class="sum-box"><div class="sum-lbl">Số Đợt Vốn</div><div class="sum-val" id="von-dot" style="color:var(--blue)">0</div></div>
-  </div>
-  <div class="card" style="margin-bottom:12px">
-    <div class="card-title">📊 Dòng Tiền</div>
-    <div id="von-cashflow"></div>
-  </div>
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <span style="font-weight:700">Các Đợt Vốn Nhận</span>
-    <button class="btn btn-accent btn-sm" onclick="openAddVon()">+ Thêm Vốn</button>
-  </div>
-  <div id="von-list"><div class="empty">Chưa có đợt vốn nào</div></div>
-</div>
-
-<!-- CHI PHÍ PHÁT SINH TAB -->
-<div id="chiPhatSinh" class="section">
-  <div class="sum-grid">
-    <div class="sum-box"><div class="sum-lbl">Tổng Chi PS</div><div class="sum-val" id="cps-tong" style="color:var(--orange)">–</div></div>
-    <div class="sum-box"><div class="sum-lbl">Số Khoản</div><div class="sum-val" id="cps-count" style="color:var(--blue)">0</div></div>
-    <div class="sum-box"><div class="sum-lbl">Mua Sắm VL</div><div class="sum-val" id="cps-ms" style="color:var(--red)">–</div></div>
-    <div class="sum-box"><div class="sum-lbl">Tổng Đã Chi</div><div class="sum-val" id="cps-total-chi" style="color:var(--red)">–</div></div>
-  </div>
-
-  <div class="card" style="margin-bottom:12px">
-    <div class="card-title">📊 Tổng Chi / Vốn</div>
-    <div id="cps-overview"></div>
-  </div>
-
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <span style="font-weight:700">Danh Sách Chi Phí Phát Sinh</span>
-    <button class="btn btn-accent btn-sm" onclick="openAddCPPS()">+ Thêm</button>
-  </div>
-  <div id="cps-list"><div class="empty">Chưa có khoản chi nào</div></div>
-</div>
-
 </div><!-- end content -->
 
 <!-- MODAL: Hạng Mục -->
-<div class="overlay" id="m-hm" onclick="bgClose(event,'m-hm')">
-  <div class="modal">
-    <div class="modal-head"><span class="modal-title">🏗️ Thêm Hạng Mục</span><button class="close-btn" onclick="closeM('m-hm')">✕</button></div>
-    <label>Tên hạng mục *</label><input id="hm-name" type="text" placeholder="VD: Phần móng, Kết cấu...">
-    <label>Trạng thái</label>
-    <div class="chip-group" id="hm-sg">
-      <button class="chip" onclick="pc(this,'hm-sg','todo')" data-v="todo">Chưa bắt đầu</button>
-      <button class="chip on" onclick="pc(this,'hm-sg','doing')" data-v="doing">Đang thi công</button>
-      <button class="chip" onclick="pc(this,'hm-sg','pause')" data-v="pause">Tạm dừng</button>
-      <button class="chip" onclick="pc(this,'hm-sg','done')" data-v="done">Hoàn thành</button>
-    </div>
-    <label>Tiến độ: <span id="hm-pv">50</span>%</label>
-    <input type="range" id="hm-prog" min="0" max="100" value="50" oninput="document.getElementById('hm-pv').textContent=this.value">
-    <div class="grid2">
-      <div><label>Ngày bắt đầu</label><input id="hm-start" type="date"></div>
-      <div><label>Dự kiến xong</label><input id="hm-end" type="date"></div>
-    </div>
-    <label>Dự toán (đ)</label><input id="hm-budget" type="number" placeholder="200000000" oninput="roundInp(this)">
-    <label>Nhà thầu phụ</label><input id="hm-sub" type="text" placeholder="Tên đội / công ty">
-    <label>Ghi chú</label><textarea id="hm-note" placeholder="Tiến độ, vấn đề phát sinh..."></textarea>
-    <button class="btn btn-accent btn-block" onclick="addHM()">Lưu Hạng Mục</button>
-  </div>
-</div>
+
 
 <!-- MODAL: Chi Phí -->
 
@@ -860,7 +826,7 @@ function renderMS(){
   const stMap={paid:['✓ Đã TT','#3ecf8e','#0d2b1f'],received:['📦 Đã nhận','#3ecf8e','#0d2b1f'],ordered:['🔵 Đã đặt','#5b8dee','#1a2540'],late:['⚠️ Trễ','#f06a6a','#2a1a1a'],pending:['⏳ Chờ','#f0a06a','#2b1a0d']};
   let filtered=msFilter==='all'?D.ms:D.ms.filter(o=>getMSStatus(o)===msFilter);
   const totalChi=D.ms.reduce((s,o)=>s+(+o.total||0),0);
-  const totalVon=D.ms.reduce((s,o)=>s+(+o.capital||0),0);
+  const totalVon=D.von.reduce((s,v)=>s+(+v.amount||0),0);
   const net=totalVon-totalChi;
   const chuaTT=filtered.filter(o=>!o.paid);
   const tongChuaTT=chuaTT.reduce((s,o)=>s+(+o.total||0),0);
@@ -1002,9 +968,80 @@ function renderSum(){
   }
 }
 
-function renderAll(){renderHM();renderMS();renderTongHop();renderVon();renderCPPS();renderSum();}
+function renderAll(){renderMS();renderMSVonSummary();renderTongHop();renderVon();renderCPPS();renderSum();}
 
 let editingVonId=null;
+
+async function quickAddVon(){
+  const amount=Math.round(+document.getElementById('ms-von-amount').value)||0;
+  if(!amount)return alert('Nhập số tiền vốn');
+  const obj={
+    amount,
+    date:document.getElementById('ms-von-date').value||null,
+    src:document.getElementById('ms-von-src').value||null,
+    note:null
+  };
+  try{
+    const r=await sb('von_von','POST',obj);
+    if(r&&r[0])D.von.push(r[0]);
+    document.getElementById('ms-von-amount').value='';
+    document.getElementById('ms-von-src').value='';
+    renderVon();renderCPPS();renderMSVonSummary();
+    showToast('✓ Đã thêm vốn '+fmt(amount));
+  }catch(e){showToast('✗ Lỗi: '+(e.message||''),false);}
+}
+
+async function deleteVonItem(id){
+  if(!confirm('Xóa đợt vốn này?'))return;
+  try{
+    await sb('von_von','DELETE',null,'?id=eq.'+id);
+    D.von=D.von.filter(x=>x.id!==id);
+    renderVon();renderCPPS();renderMSVonSummary();
+    showToast('✓ Đã xóa');
+  }catch(e){showToast('✗ Lỗi xóa',false);}
+}
+
+function renderMSVonSummary(){
+  const tongVon=D.von.reduce((s,v)=>s+(+v.amount||0),0);
+  const tongMuaSam=D.ms.reduce((s,o)=>s+(+o.total||0),0);
+  const tongCPPS=D.cpps.reduce((s,o)=>s+(+o.amount||0),0);
+  const tongChi=tongMuaSam+tongCPPS;
+  const conLai=tongVon-tongChi;
+
+  // Summary bar
+  const sumEl=document.getElementById('ms-von-summary');
+  if(sumEl){
+    sumEl.innerHTML=`
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+        <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px">Tổng Vốn</div>
+          <div style="font-size:14px;font-weight:700;color:var(--green);margin-top:3px">${fmt(tongVon)}</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px">Đã Chi</div>
+          <div style="font-size:14px;font-weight:700;color:var(--red);margin-top:3px">${fmt(tongChi)}</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px">${conLai>=0?'Còn lại':'Thiếu'}</div>
+          <div style="font-size:14px;font-weight:700;margin-top:3px;color:${conLai>=0?'var(--green)':'var(--red)'}">${fmt(Math.abs(conLai))}</div>
+        </div>
+      </div>`;
+  }
+
+  // Von list
+  const listEl=document.getElementById('ms-von-list');
+  if(!listEl||!D.von.length)return;
+  const sorted=[...D.von].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  listEl.innerHTML=`<div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Lịch sử vốn</div>`
+  +sorted.map(v=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:var(--surface2);border-radius:8px;margin-bottom:5px;font-size:12px">
+      <div>
+        <div style="font-weight:700;color:var(--green)">${fmt(v.amount)}</div>
+        <div style="color:var(--muted)">${v.src||'–'} ${v.date?' · '+fmtDate(v.date):''}</div>
+      </div>
+      <button class="del-btn" onclick="deleteVonItem(${v.id})">✕</button>
+    </div>`).join('');
+}
 
 function openAddVon(){
   editingVonId=null;
@@ -1313,7 +1350,7 @@ function exportCSV(){
 }
 
 window.addEventListener('load',()=>{
-  ['cp-date','tt-date','vt-date','hm-start'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=td();});
+  ['cp-date','tt-date','vt-date','hm-start','ms-von-date'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=td();});
   syncAll();
 });
 </script>
