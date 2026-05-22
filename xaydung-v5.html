@@ -304,14 +304,10 @@ input[type=range]{padding:0;background:transparent;border:none;margin-bottom:12p
 
     <!-- Danh mục vật liệu -->
     <label>Danh mục</label>
-    <select id="ms-cat">
-      <option value="vatLieuTho">Vật liệu thô</option>
-      <option value="hoanThien">Hoàn thiện</option>
-      <option value="coDien">Cơ điện</option>
-      <option value="khuonCua">Khung cửa</option>
-      <option value="sanLap">San lấp & móng</option>
-      <option value="khac">Khác</option>
-    </select>
+    <div class="ac-wrap">
+      <input id="ms-cat" type="text" placeholder="VD: Vật liệu thô, Hoàn thiện, Cơ điện..." oninput="showAC('cat',this.value)" autocomplete="off">
+      <div class="ac-list" id="ac-cat"></div>
+    </div>
 
     <div class="grid2">
       <div><label>Số lượng</label><input id="ms-qty" type="number" placeholder="100" oninput="calcMSTotal()"></div>
@@ -396,6 +392,7 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const H={'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY};
 
 const CATS={vatLieuTho:'🧱 Vật Liệu Thô',hoanThien:'🎨 Hoàn Thiện',coDien:'⚡ Cơ Điện',khuonCua:'🚪 Khung Cửa',sanLap:'🏔️ San Lấp & Móng',khac:'📦 Khác'};
+function getCatLabel(cat){return CATS[cat]||cat||'Khác';}
 
 let D={proj:{},hm:[],cp:[],tt:[],vt:[],ms:[],von:[]};
 let msFilter='all';
@@ -492,14 +489,21 @@ function gc(grp){const o=document.querySelector('#'+grp+' .chip.on');return o?o.
 function clr(ids){ids.forEach(id=>{const e=document.getElementById(id);if(e)e.value='';}); }
 
 // AUTOCOMPLETE chung
+// Danh mục mặc định
+const DEFAULT_CATS=['Vật liệu thô','Hoàn thiện','Cơ điện','Khung cửa','San lấp & móng','Nội thất','Khác'];
+
 function getACList(type){
   const s=new Set();
   if(type==='name')D.ms.forEach(o=>{if(o.name)s.add(o.name);});
   if(type==='supplier'){D.ms.forEach(o=>{if(o.supplier)s.add(o.supplier);});D.vt.forEach(o=>{if(o.supplier)s.add(o.supplier);});}
+  if(type==='cat'){
+    DEFAULT_CATS.forEach(c=>s.add(c));
+    D.ms.forEach(o=>{if(o.cat)s.add(o.cat);});
+  }
   return[...s];
 }
 function showAC(type,val){
-  const listId=type==='name'?'ac-name':'ac-supplier';
+  const listId=type==='name'?'ac-name':type==='supplier'?'ac-supplier':'ac-cat';
   const list=document.getElementById(listId);
   if(!val){list.classList.remove('open');return;}
   const m=getACList(type).filter(s=>s.toLowerCase().includes(val.toLowerCase()));
@@ -537,7 +541,7 @@ function selACName(name){
 }
 
 function selAC(inputId,listId,v){document.getElementById(inputId).value=v;document.getElementById(listId).classList.remove('open');}
-document.addEventListener('click',e=>{if(!e.target.closest('.ac-wrap'))['ac-name','ac-supplier'].forEach(i=>{const el=document.getElementById(i);if(el)el.classList.remove('open');});});
+document.addEventListener('click',e=>{if(!e.target.closest('.ac-wrap'))['ac-name','ac-supplier','ac-cat'].forEach(i=>{const el=document.getElementById(i);if(el)el.classList.remove('open');});});
 
 // ADD HM
 async function addHM(){
@@ -596,7 +600,7 @@ function openAddMS(){
   clr(['ms-name','ms-qty','ms-unit','ms-price','ms-total-val','ms-supplier','ms-ordered','ms-received','ms-paid','ms-spent','ms-capital','ms-capdate','ms-capsrc','ms-note']);
   document.getElementById('ms-ordered').value=td();
   document.getElementById('ms-method').value='chuyen';
-  document.getElementById('ms-cat').value='vatLieuTho';
+  document.getElementById('ms-cat').value='';
   openM('m-ms');
 }
 
@@ -607,7 +611,7 @@ function openEditMS(id){
   document.getElementById('ms-save-btn').textContent='Cập Nhật';
   document.getElementById('ms-del-btn').style.display='inline-flex';
   document.getElementById('ms-name').value=o.name||'';
-  document.getElementById('ms-cat').value=o.cat||'vatLieuTho';
+  document.getElementById('ms-cat').value=o.cat||'';
   document.getElementById('ms-qty').value=o.qty||'';
   document.getElementById('ms-unit').value=o.unit||'';
   document.getElementById('ms-price').value=o.price||'';
@@ -639,7 +643,7 @@ async function saveMS(){
   const total=totalInput||(qty&&price?Math.round(qty*price):null);
   const obj={
     name,
-    cat:gv('ms-cat')||'vatLieuTho',
+    cat:gv('ms-cat')||'Khác',
     qty,price,total,
     unit:gnull('ms-unit'),
     supplier:gnull('ms-supplier'),
@@ -706,16 +710,22 @@ function getDuToan(){
 
 function renderDuToanForm(){
   const dt=getDuToan();
-  document.getElementById('dt-form').innerHTML=Object.entries(CATS).map(([k,v])=>`
+  const dynCats=[...new Set([...Object.entries(CATS).map(([k,v])=>({key:k,label:v})),...D.ms.map(o=>({key:o.cat||'Khác',label:getCatLabel(o.cat||'Khác')})).filter(c=>!CATS[c.key])])];
+  document.getElementById('dt-form').innerHTML=dynCats.map(({key,label})=>`
     <div style="margin-bottom:12px">
-      <label>${v}</label>
-      <input type="number" id="dt-${k}" placeholder="Nhập dự toán (đ)" value="${dt[k]||''}">
+      <label>${label}</label>
+      <input type="number" id="dt-${key.replace(/[^a-zA-Z0-9]/g,'_')}" placeholder="Nhập dự toán (đ)" value="${dt[key]||''}">
     </div>`).join('');
 }
 
 async function saveDuToan(){
   const dt={};
-  Object.keys(CATS).forEach(k=>{const v=+document.getElementById('dt-'+k).value||0;if(v)dt[k]=v;});
+  const dynCats2=[...new Set([...Object.keys(CATS),...D.ms.map(o=>o.cat||'Khác')])];
+  dynCats2.forEach(k=>{
+    const safeKey=k.replace(/[^a-zA-Z0-9]/g,'_');
+    const el=document.getElementById('dt-'+safeKey);
+    if(el){const v=Math.round(+el.value)||0;if(v)dt[k]=v;}
+  });
   try{
     await sb('project_info','POST',{key:'duToan',value:JSON.stringify(dt)},'?on_conflict=key');
     D.proj.duToan=JSON.stringify(dt);
@@ -793,9 +803,8 @@ function renderTongHop(){
   const dt=getDuToan();
   // Gom nhóm theo danh mục
   const groups={};
-  Object.keys(CATS).forEach(k=>groups[k]={items:[],total:0,duToan:dt[k]||0});
   D.ms.forEach(o=>{
-    const cat=o.cat||'khac';
+    const cat=o.cat||'Khác';
     if(!groups[cat])groups[cat]={items:[],total:0,duToan:dt[cat]||0};
     groups[cat].items.push(o);
     groups[cat].total+=(+o.total||0);
@@ -822,7 +831,11 @@ function renderTongHop(){
   const hasData=D.ms.length>0;
   if(!hasData){content.innerHTML='<div class="empty">Chưa có đơn hàng nào</div>';return;}
 
-  content.innerHTML=Object.entries(CATS).map(([catKey,catName])=>{
+  // Get all unique cats from data
+  const allCats=[...new Set(D.ms.map(o=>o.cat||'Khác'))];
+  
+  content.innerHTML=allCats.map((catKey)=>{
+    const catName=getCatLabel(catKey);
     const g=groups[catKey];
     if(!g||!g.items.length)return'';
     const cl=g.total-g.duToan;
