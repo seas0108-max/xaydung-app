@@ -132,6 +132,7 @@ input[type=range]{padding:0;background:transparent;border:none;margin-bottom:12p
   <button class="tab" onclick="switchTab('muaSam',this)">🛒 Mua Sắm</button>
   <button class="tab" onclick="switchTab('tongHop',this)">📈 Tổng Hợp</button>
   <button class="tab" onclick="switchTab('von',this)">💵 Vốn</button>
+  <button class="tab" onclick="switchTab('chiPhatSinh',this)">💡 Chi PS</button>
 </div>
 
 <div class="content">
@@ -258,6 +259,27 @@ input[type=range]{padding:0;background:transparent;border:none;margin-bottom:12p
     <button class="btn btn-accent btn-sm" onclick="openAddVon()">+ Thêm Vốn</button>
   </div>
   <div id="von-list"><div class="empty">Chưa có đợt vốn nào</div></div>
+</div>
+
+<!-- CHI PHÍ PHÁT SINH TAB -->
+<div id="chiPhatSinh" class="section">
+  <div class="sum-grid">
+    <div class="sum-box"><div class="sum-lbl">Tổng Chi PS</div><div class="sum-val" id="cps-tong" style="color:var(--orange)">–</div></div>
+    <div class="sum-box"><div class="sum-lbl">Số Khoản</div><div class="sum-val" id="cps-count" style="color:var(--blue)">0</div></div>
+    <div class="sum-box"><div class="sum-lbl">Mua Sắm VL</div><div class="sum-val" id="cps-ms" style="color:var(--red)">–</div></div>
+    <div class="sum-box"><div class="sum-lbl">Tổng Đã Chi</div><div class="sum-val" id="cps-total-chi" style="color:var(--red)">–</div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-title">📊 Tổng Chi / Vốn</div>
+    <div id="cps-overview"></div>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <span style="font-weight:700">Danh Sách Chi Phí Phát Sinh</span>
+    <button class="btn btn-accent btn-sm" onclick="openAddCPPS()">+ Thêm</button>
+  </div>
+  <div id="cps-list"><div class="empty">Chưa có khoản chi nào</div></div>
 </div>
 
 </div><!-- end content -->
@@ -421,6 +443,8 @@ input[type=range]{padding:0;background:transparent;border:none;margin-bottom:12p
     <input id="cpps-amount" type="number" placeholder="500000" oninput="roundInp(this)">
     <label>Ngày</label>
     <input id="cpps-date" type="date">
+    <label>Thông tin đính kèm</label>
+    <input id="cpps-note" type="text" placeholder="Số hóa đơn, ghi chú...">
     <div style="display:flex;gap:8px;margin-top:4px">
       <button class="btn btn-red btn-sm" id="cpps-del-btn" style="display:none" onclick="deleteCPPS()">🗑 Xóa</button>
       <button class="btn btn-accent btn-block" onclick="saveCPPS()">Lưu Khoản Chi</button>
@@ -1089,6 +1113,7 @@ function openAddCPPS(){
   document.getElementById('cpps-custom-wrap').style.display='none';
   document.getElementById('cpps-amount').value='';
   document.getElementById('cpps-date').value=td();
+  document.getElementById('cpps-note').value='';
   openM('m-cpps');
 }
 
@@ -1110,6 +1135,7 @@ function openEditCPPS(id){
   }
   document.getElementById('cpps-amount').value=o.amount||'';
   document.getElementById('cpps-date').value=o.date||'';
+  document.getElementById('cpps-note').value=o.note||'';
   openM('m-cpps');
 }
 
@@ -1151,65 +1177,107 @@ function renderCPPS(){
   const tongChi=tongMuaSam+tongCPPS;
   const conLai=tongVon-tongChi;
 
-  // Summary
+  // === TỔNG QUAN CARD (tab Tổng Quan) ===
   const sumEl=document.getElementById('cpps-summary');
   if(sumEl){
     sumEl.innerHTML=`
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
         <div style="background:var(--surface2);border-radius:8px;padding:10px">
           <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px">Tổng vốn nhận</div>
-          <div style="font-size:16px;font-weight:700;color:var(--green);margin-top:3px">${fmt(tongVon)}</div>
+          <div style="font-size:15px;font-weight:700;color:var(--green);margin-top:3px">${fmt(tongVon)}</div>
         </div>
         <div style="background:var(--surface2);border-radius:8px;padding:10px">
           <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px">Mua sắm VL</div>
-          <div style="font-size:16px;font-weight:700;color:var(--red);margin-top:3px">${fmt(tongMuaSam)}</div>
+          <div style="font-size:15px;font-weight:700;color:var(--red);margin-top:3px">${fmt(tongMuaSam)}</div>
         </div>
         <div style="background:var(--surface2);border-radius:8px;padding:10px">
           <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px">Chi phí phát sinh</div>
-          <div style="font-size:16px;font-weight:700;color:var(--orange);margin-top:3px">${fmt(tongCPPS)}</div>
+          <div style="font-size:15px;font-weight:700;color:var(--orange);margin-top:3px">${fmt(tongCPPS)}</div>
         </div>
         <div style="background:var(--surface2);border-radius:8px;padding:10px">
           <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px">${conLai>=0?'Còn lại':'Còn thiếu'}</div>
-          <div style="font-size:16px;font-weight:700;margin-top:3px;color:${conLai>=0?'var(--green)':'var(--red)'}">${conLai>=0?'+':''}${fmt(Math.abs(conLai))}</div>
+          <div style="font-size:15px;font-weight:700;margin-top:3px;color:${conLai>=0?'var(--green)':'var(--red)'}">${conLai>=0?'+':''}${fmt(Math.abs(conLai))}</div>
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);display:flex;justify-content:space-between">
-        <span>Tổng đã chi: <strong style="color:var(--red)">${fmt(tongChi)}</strong></span>
-        <span>= VL ${fmt(tongMuaSam)} + PS ${fmt(tongCPPS)}</span>
+      <div style="font-size:11px;color:var(--muted);text-align:center">Tổng chi: ${fmt(tongChi)} = VL ${fmt(tongMuaSam)} + PS ${fmt(tongCPPS)}</div>`;
+  }
+
+  // === TAB CHI PHÍ PHÁT SINH ===
+  const e1=document.getElementById('cps-tong');
+  const e2=document.getElementById('cps-count');
+  const e3=document.getElementById('cps-ms');
+  const e4=document.getElementById('cps-total-chi');
+  if(e1)e1.textContent=fmt(tongCPPS);
+  if(e2)e2.textContent=D.cpps.length;
+  if(e3)e3.textContent=fmt(tongMuaSam);
+  if(e4)e4.textContent=fmt(tongChi);
+
+  // Overview bar
+  const ov=document.getElementById('cps-overview');
+  if(ov){
+    const maxVal=Math.max(tongVon,tongChi,1);
+    ov.innerHTML=`
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px"><span>💵 Vốn nhận</span><strong style="color:var(--green)">${fmt(tongVon)}</strong></div>
+        <div class="pbar-wrap"><div class="pbar" style="width:${Math.round(tongVon/maxVal*100)}%;background:var(--green)"></div></div>
+      </div>
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px"><span>🛒 Mua sắm VL</span><strong style="color:var(--red)">${fmt(tongMuaSam)}</strong></div>
+        <div class="pbar-wrap"><div class="pbar" style="width:${Math.round(tongMuaSam/maxVal*100)}%;background:var(--red)"></div></div>
+      </div>
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px"><span>💡 Chi phát sinh</span><strong style="color:var(--orange)">${fmt(tongCPPS)}</strong></div>
+        <div class="pbar-wrap"><div class="pbar" style="width:${Math.round(tongCPPS/maxVal*100)}%;background:var(--orange)"></div></div>
+      </div>
+      <div class="divider"></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px">
+        <span style="color:var(--muted)">${conLai>=0?'Vốn còn dư':'Vốn còn thiếu'}</span>
+        <strong style="color:${conLai>=0?'var(--green)':'var(--red)'}">${conLai>=0?'+':''}${fmt(Math.abs(conLai))}</strong>
       </div>`;
   }
 
-  // List
-  const listEl=document.getElementById('cpps-list');
+  // === DANH SÁCH CHI TIẾT ===
+  const listEl=document.getElementById('cps-list');
   if(!listEl)return;
-  if(!D.cpps.length){listEl.innerHTML='<div style="color:var(--muted);font-size:13px">Chưa có khoản chi nào</div>';return;}
+  if(!D.cpps.length){listEl.innerHTML='<div class="empty">Chưa có khoản chi nào · Nhấn + để thêm</div>';return;}
 
-  // Group by name
+  const sorted=[...D.cpps].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   const byName={};
-  [...D.cpps].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).forEach(o=>{
+  sorted.forEach(o=>{
     if(!byName[o.name])byName[o.name]={name:o.name,total:0,rows:[]};
     byName[o.name].total+=+o.amount||0;
     byName[o.name].rows.push(o);
   });
 
   listEl.innerHTML=Object.values(byName).map(g=>`
-    <div style="margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-        <span style="font-weight:600;font-size:13px">${g.name}</span>
+    <div class="card" style="margin-bottom:10px;padding:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-weight:700;font-size:14px">${g.name}</span>
         <span style="font-weight:700;color:var(--orange)">${fmt(g.total)}</span>
       </div>
       ${g.rows.map(o=>`
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:var(--surface2);border-radius:8px;margin-bottom:4px;font-size:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--surface2);border-radius:8px;margin-bottom:6px">
           <div>
-            <span style="color:var(--muted)">${fmtDate(o.date)}</span>
-            ${o.note?`<span style="color:var(--muted)"> · ${o.note}</span>`:''}
+            <div style="font-size:13px;font-weight:600;color:var(--orange)">${fmt(o.amount)}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">📅 ${fmtDate(o.date)||'–'}${o.note?' · 📎 '+o.note:''}</div>
           </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <strong style="color:var(--orange)">${fmt(o.amount)}</strong>
-            <button class="del-btn" onclick="openEditCPPS(${o.id})">✏️</button>
-          </div>
+          <button class="del-btn" onclick="openEditCPPS(${o.id})">✏️ Sửa</button>
         </div>`).join('')}
+      <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px;display:flex;justify-content:space-between;font-size:12px">
+        <span style="color:var(--muted)">${g.rows.length} lần chi</span>
+        <strong style="color:var(--orange)">Tổng: ${fmt(g.total)}</strong>
+      </div>
     </div>`).join('');
+
+  // Update cpps-list in tongQuan
+  const oldList=document.getElementById('cpps-list');
+  if(oldList){
+    oldList.innerHTML=sorted.slice(0,5).map(o=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:var(--surface2);border-radius:8px;margin-bottom:4px;font-size:12px">
+        <div><div style="font-weight:600">${o.name}</div><span style="color:var(--muted)">${fmtDate(o.date)||'–'}${o.note?' · '+o.note:''}</span></div>
+        <strong style="color:var(--orange)">${fmt(o.amount)}</strong>
+      </div>`).join('')+(D.cpps.length>5?`<div style="text-align:center;font-size:12px;color:var(--muted);margin-top:6px">+${D.cpps.length-5} khoản khác</div>`:'');
+  }
 }
 
 function exportCSV(){
