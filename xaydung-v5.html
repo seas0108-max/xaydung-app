@@ -133,6 +133,7 @@ input[type=range]{padding:0;background:transparent;border:none;margin-bottom:12p
   <button class="tab" onclick="switchTab('vatTu',this)">🧱 Vật Tư</button>
   <button class="tab" onclick="switchTab('muaSam',this)">🛒 Mua Sắm</button>
   <button class="tab" onclick="switchTab('tongHop',this)">📈 Tổng Hợp</button>
+  <button class="tab" onclick="switchTab('von',this)">💵 Vốn</button>
 </div>
 
 <div class="content">
@@ -262,6 +263,21 @@ input[type=range]{padding:0;background:transparent;border:none;margin-bottom:12p
     <div id="th-overview"></div>
   </div>
   <div id="th-content"><div class="empty">Đang tải...</div></div>
+</div>
+
+<!-- VỐN -->
+<div id="von" class="section">
+  <div class="sum-grid">
+    <div class="sum-box"><div class="sum-lbl">Tổng Vốn Nhận</div><div class="sum-val" id="von-tong" style="color:var(--green)">–</div></div>
+    <div class="sum-box"><div class="sum-lbl">Đã Phân Bổ</div><div class="sum-val" id="von-pb" style="color:var(--accent)">–</div></div>
+    <div class="sum-box"><div class="sum-lbl">Còn Lại</div><div class="sum-val" id="von-con" style="color:var(--blue)">–</div></div>
+    <div class="sum-box"><div class="sum-lbl">Tổng Chi</div><div class="sum-val" id="von-chi" style="color:var(--red)">–</div></div>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <span style="font-weight:700">Các Đợt Vốn</span>
+    <button class="btn btn-accent btn-sm" onclick="openAddVon()">+ Thêm Vốn</button>
+  </div>
+  <div id="von-list"><div class="empty">Chưa có đợt vốn nào</div></div>
 </div>
 
 </div><!-- end content -->
@@ -436,6 +452,36 @@ input[type=range]{padding:0;background:transparent;border:none;margin-bottom:12p
   </div>
 </div>
 
+<!-- MODAL: Nhập Vốn -->
+<div class="overlay" id="m-von" onclick="bgClose(event,'m-von')">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title" id="von-modal-title">💵 Thêm Đợt Vốn</span>
+      <button class="close-btn" onclick="closeM('m-von')">✕</button>
+    </div>
+    <div class="sec-lbl">💰 Thông Tin Vốn</div>
+    <label>Số tiền vốn (đ) *</label>
+    <input id="von-amount" type="number" placeholder="50000000" oninput="roundInp(this)">
+    <div class="grid2">
+      <div><label>Ngày nhận vốn</label><input id="von-date" type="date"></div>
+      <div><label>Nguồn vốn</label><input id="von-src" type="text" placeholder="Ngân hàng, đối tác..."></div>
+    </div>
+    <label>Ghi chú</label>
+    <input id="von-note" type="text" placeholder="Ghi chú thêm...">
+
+    <div class="sec-lbl">📦 Phân Bổ Cho Đơn Hàng</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Chọn các đơn hàng muốn phân bổ vốn này. App sẽ tự tính số tiền phân bổ đều.</p>
+    <div id="von-order-list" style="max-height:200px;overflow-y:auto"></div>
+
+    <div id="von-pb-preview" style="display:none;margin-top:10px;padding:10px;background:var(--surface2);border-radius:8px;font-size:13px"></div>
+
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn btn-red btn-sm" id="von-del-btn" style="display:none" onclick="deleteVon()">🗑 Xóa</button>
+      <button class="btn btn-accent btn-block" onclick="saveVon()">Lưu Đợt Vốn</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -445,7 +491,7 @@ const H={'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Be
 
 const CATS={vatLieuTho:'🧱 Vật Liệu Thô',hoanThien:'🎨 Hoàn Thiện',coDien:'⚡ Cơ Điện',khuonCua:'🚪 Khung Cửa',sanLap:'🏔️ San Lấp & Móng',khac:'📦 Khác'};
 
-let D={proj:{},hm:[],cp:[],tt:[],vt:[],ms:[]};
+let D={proj:{},hm:[],cp:[],tt:[],vt:[],ms:[],von:[]};
 let msFilter='all';
 let editingId=null;
 let projDebounce=null;
@@ -488,15 +534,16 @@ function setSyncBtn(state){
 async function syncAll(){
   setSyncBtn('syncing');
   try{
-    const[hm,cp,tt,vt,ms,proj]=await Promise.all([
+    const[hm,cp,tt,vt,ms,proj,von]=await Promise.all([
       sb('hang_muc','GET',null,'?order=id.asc'),
       sb('chi_phi','GET',null,'?order=id.asc'),
       sb('thanh_toan','GET',null,'?order=id.asc'),
       sb('vat_tu','GET',null,'?order=id.asc'),
       sb('mua_sam','GET',null,'?order=id.asc'),
       sb('project_info','GET',null,'?order=id.asc'),
+      sb('von_von','GET',null,'?order=id.asc').catch(()=>[]),
     ]);
-    D.hm=hm||[];D.cp=cp||[];D.tt=tt||[];D.vt=vt||[];D.ms=ms||[];
+    D.hm=hm||[];D.cp=cp||[];D.tt=tt||[];D.vt=vt||[];D.ms=ms||[];D.von=von||[];
     D.proj={};(proj||[]).forEach(p=>D.proj[p.key]=p.value);
     loadProjFields();renderAll();
     setSyncBtn('ok');showToast('✓ Đã đồng bộ dữ liệu');
@@ -530,6 +577,7 @@ function switchTab(id,btn){
 }
 function openM(id){
   if(id==='m-dt')renderDuToanForm();
+  if(id==='m-von')renderVonOrderList([]);
   document.getElementById(id).classList.add('open');
 }
 function closeM(id){document.getElementById(id).classList.remove('open');['ac-name','ac-supplier'].forEach(i=>{const e=document.getElementById(i);if(e)e.classList.remove('open');});}
@@ -942,7 +990,147 @@ function renderSum(){
   }
 }
 
-function renderAll(){renderHM();renderCP();renderTT();renderVT();renderMS();renderTongHop();renderSum();}
+function renderAll(){renderHM();renderCP();renderTT();renderVT();renderMS();renderTongHop();renderVon();renderSum();}
+
+let editingVonId=null;
+
+function openAddVon(){
+  editingVonId=null;
+  document.getElementById('von-modal-title').textContent='💵 Thêm Đợt Vốn';
+  document.getElementById('von-del-btn').style.display='none';
+  document.getElementById('von-amount').value='';
+  document.getElementById('von-date').value=td();
+  document.getElementById('von-src').value='';
+  document.getElementById('von-note').value='';
+  document.getElementById('von-pb-preview').style.display='none';
+  renderVonOrderList([]);
+  openM('m-von');
+}
+
+function openEditVon(id){
+  const v=D.von.find(x=>x.id===id);if(!v)return;
+  editingVonId=id;
+  document.getElementById('von-modal-title').textContent='✏️ Chỉnh Sửa Đợt Vốn';
+  document.getElementById('von-del-btn').style.display='inline-flex';
+  document.getElementById('von-amount').value=v.amount||'';
+  document.getElementById('von-date').value=v.date||'';
+  document.getElementById('von-src').value=v.src||'';
+  document.getElementById('von-note').value=v.note||'';
+  const selected=v.order_ids?v.order_ids.split(',').map(Number):[];
+  renderVonOrderList(selected);
+  openM('m-von');
+}
+
+function renderVonOrderList(selected=[]){
+  const el=document.getElementById('von-order-list');
+  if(!D.ms.length){el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">Chưa có đơn hàng nào</div>';return;}
+  el.innerHTML=D.ms.map(o=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--border)">
+      <input type="checkbox" id="vck-${o.id}" value="${o.id}" ${selected.includes(o.id)?'checked':''} onchange="updateVonPreview()" style="width:18px;height:18px;accent-color:var(--accent);flex-shrink:0;margin-bottom:0">
+      <label for="vck-${o.id}" style="flex:1;cursor:pointer;margin-bottom:0;color:var(--text);font-size:13px;font-weight:500">
+        <div>${o.name}</div>
+        <div style="font-size:11px;color:var(--muted)">${o.supplier||''} · ${fmt(o.total)}</div>
+      </label>
+    </div>`).join('');
+  updateVonPreview();
+}
+
+function getSelectedOrders(){
+  return D.ms.filter(o=>document.getElementById('vck-'+o.id)?.checked);
+}
+
+function updateVonPreview(){
+  const amt=Math.round(+document.getElementById('von-amount').value)||0;
+  const selected=getSelectedOrders();
+  const preview=document.getElementById('von-pb-preview');
+  if(!amt||!selected.length){preview.style.display='none';return;}
+  const perOrder=Math.round(amt/selected.length);
+  preview.style.display='block';
+  preview.innerHTML=`<div style="color:var(--accent);font-weight:700;margin-bottom:6px">Phân bổ ${fmt(amt)} cho ${selected.length} đơn:</div>`
+    +selected.map(o=>`<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--muted)">${o.name}</span><strong style="color:var(--green)">${fmt(perOrder)}</strong></div>`).join('');
+}
+
+async function saveVon(){
+  const amount=Math.round(+document.getElementById('von-amount').value)||0;
+  if(!amount)return alert('Nhập số tiền vốn');
+  const selected=getSelectedOrders();
+  const order_ids=selected.map(o=>o.id).join(',');
+  const obj={
+    amount,
+    date:gnull('von-date'),
+    src:gnull('von-src'),
+    note:gnull('von-note'),
+    order_ids:order_ids||null,
+    per_order:selected.length?Math.round(amount/selected.length):null,
+  };
+  try{
+    if(editingVonId){
+      await sb('von_von','PATCH',obj,'?id=eq.'+editingVonId);
+      const idx=D.von.findIndex(x=>x.id===editingVonId);
+      if(idx!==-1)D.von[idx]={...D.von[idx],...obj};
+      showToast('✓ Đã cập nhật đợt vốn');
+    }else{
+      const r=await sb('von_von','POST',obj);
+      if(r&&r[0])D.von.push(r[0]);
+      showToast('✓ Đã lưu đợt vốn');
+    }
+    closeM('m-von');renderAll();
+  }catch(e){showToast('✗ Lỗi lưu vốn',false);}
+}
+
+async function deleteVon(){
+  if(!editingVonId||!confirm('Xóa đợt vốn này?'))return;
+  try{
+    await sb('von_von','DELETE',null,'?id=eq.'+editingVonId);
+    D.von=D.von.filter(x=>x.id!==editingVonId);
+    closeM('m-von');renderAll();showToast('✓ Đã xóa đợt vốn');
+  }catch(e){showToast('✗ Lỗi xóa',false);}
+}
+
+function renderVon(){
+  const list=document.getElementById('von-list');
+  if(!list)return;
+
+  const tongVon=D.von.reduce((s,v)=>s+(+v.amount||0),0);
+  const tongPB=D.von.reduce((s,v)=>{
+    if(!v.order_ids||!v.per_order)return s;
+    return s+(v.order_ids.split(',').length*(+v.per_order||0));
+  },0);
+  const tongChi=D.ms.reduce((s,o)=>s+(+o.total||0),0);
+
+  const el1=document.getElementById('von-tong');
+  const el2=document.getElementById('von-pb');
+  const el3=document.getElementById('von-con');
+  const el4=document.getElementById('von-chi');
+  if(el1)el1.textContent=fmt(tongVon);
+  if(el2)el2.textContent=fmt(tongPB);
+  if(el3){el3.textContent=fmt(tongVon-tongPB);el3.style.color=(tongVon-tongPB)>=0?'var(--blue)':'var(--red)';}
+  if(el4)el4.textContent=fmt(tongChi);
+
+  if(!D.von.length){list.innerHTML='<div class="empty">Chưa có đợt vốn nào · Nhấn + để thêm</div>';return;}
+
+  list.innerHTML=[...D.von].reverse().map(v=>{
+    const orderNames=v.order_ids?v.order_ids.split(',').map(id=>{
+      const o=D.ms.find(x=>x.id===+id);
+      return o?o.name:'';
+    }).filter(Boolean):[];
+    return`<div class="row">
+      <div class="row-head">
+        <div>
+          <div class="row-name" style="color:var(--green)">${fmt(v.amount)}</div>
+          <div class="row-sub">${v.src||'–'} ${v.date?' · '+v.date:''}</div>
+        </div>
+        <button class="edit-btn" onclick="openEditVon(${v.id})">✏️ Sửa</button>
+      </div>
+      ${orderNames.length?`
+        <div style="margin-top:8px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Phân bổ ${fmt(v.per_order)} × ${orderNames.length} đơn:</div>
+          ${orderNames.map(n=>`<div style="font-size:12px;color:var(--text);padding:2px 0">• ${n}</div>`).join('')}
+        </div>`:'<div style="font-size:12px;color:var(--muted);margin-top:6px">Chưa phân bổ cho đơn nào</div>'}
+      ${v.note?`<div style="margin-top:6px;font-size:12px;color:var(--muted);font-style:italic">${v.note}</div>`:''}
+    </div>`;
+  }).join('');
+}
 
 function exportCSV(){
   const h=['Vật liệu','Danh mục','NCC','SL','Đơn vị','Đơn giá','Tổng tiền','Ngày đặt','Ngày nhận','Ngày TT','Ngày chi','Vốn nhận','Ngày vốn','Nguồn vốn','Ghi chú'];
