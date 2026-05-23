@@ -442,18 +442,24 @@ let projDebounce=null;
 
 async function sb(table,method='GET',body=null,query=''){
   const url=`${SUPA_URL}/rest/v1/${table}${query}`;
-  const prefer=method==='POST'?'return=representation':method==='PATCH'?'return=representation':'';
-  const opts={method,headers:{...H,'Prefer':prefer}};
+  const headers={...H};
+  if(method==='POST'||method==='PATCH') headers['Prefer']='return=representation';
+  if(method==='POST') headers['Content-Profile']='public';
+  if(method==='PATCH') headers['Content-Profile']='public';
+  const opts={method,headers};
   if(body)opts.body=JSON.stringify(body);
   const r=await fetch(url,opts);
   if(!r.ok){
     const e=await r.text();
-    console.error(`SB ERROR [${method} ${table}]:`,e);
+    console.error(`SB ERROR [${method} ${table}]:`,e,body);
+    // Try parse error message
+    try{const j=JSON.parse(e);throw new Error(j.message||j.details||e);}catch(pe){if(pe.message!==e)throw pe;}
     throw new Error(e);
   }
   if(method==='DELETE')return null;
   const text=await r.text();
-  return text?JSON.parse(text):[];
+  if(!text)return [];
+  try{return JSON.parse(text);}catch{return [];}
 }
 
 function fmt(n){
