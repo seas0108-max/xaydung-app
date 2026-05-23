@@ -500,23 +500,22 @@ function setSyncBtn(state){
 async function syncAll(){
   setSyncBtn('syncing');
   try{
-    const[hm,cp,tt,vt,ms,proj,von,cpps]=await Promise.all([
-      sb('hang_muc','GET',null,'?order=id.asc'),
-      sb('chi_phi','GET',null,'?order=id.asc'),
-      sb('thanh_toan','GET',null,'?order=id.asc'),
-      sb('vat_tu','GET',null,'?order=id.asc'),
-      sb('mua_sam','GET',null,'?order=id.asc'),
-      sb('project_info','GET',null,'?order=id.asc'),
-      sb('von_von','GET',null,'?order=id.asc').catch(()=>[]),
-      sb('chi_phi_ps','GET',null,'?order=id.asc').catch(()=>[]),
-    ]);
-    D.hm=hm||[];D.cp=cp||[];D.tt=tt||[];D.vt=vt||[];D.ms=ms||[];D.von=von||[];D.cpps=cpps||[]; // cp,tt,vt kept for summary
-    D.proj={};(proj||[]).forEach(p=>D.proj[p.key]=p.value);
+    // Chạy từng request để dễ debug lỗi
+    D.ms = await sb('mua_sam','GET',null,'?order=id.asc');
+    D.proj = {};
+    const proj = await sb('project_info','GET',null,'?order=id.asc');
+    (proj||[]).forEach(p=>D.proj[p.key]=p.value);
+    D.von = await sb('von_von','GET',null,'?order=id.asc').catch(()=>[]);
+    D.cpps = await sb('chi_phi_ps','GET',null,'?order=id.asc').catch(()=>[]);
+    // Keep these for compatibility
+    D.hm=[];D.cp=[];D.tt=[];D.vt=[];
     loadProjFields();renderAll();
     setSyncBtn('ok');showToast('✓ Đã đồng bộ dữ liệu');
     setTimeout(()=>setSyncBtn(''),3000);
   }catch(e){
-    setSyncBtn('err');showToast('✗ Lỗi kết nối Supabase',false);
+    console.error('syncAll error:',e);
+    setSyncBtn('err');
+    showToast('✗ '+(e.message||'Lỗi kết nối'),false);
     setTimeout(()=>setSyncBtn(''),4000);
   }
 }
