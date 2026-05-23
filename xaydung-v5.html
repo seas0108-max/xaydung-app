@@ -429,8 +429,8 @@ input[type=range]{padding:0;background:transparent;border:none;margin-bottom:12p
 
 <script>
 const SUPA_URL='https://cyjeaekfkxmuzztyhqhe.supabase.co';
-const SUPA_KEY='sb_publishable_zVV2EBAPtJqjbR1oVBgxUQ_4-_vg5N8';
-const H={'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'X-Client-Info':'supabase-js/2.0.0'};
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5amVhZWtma3htdXp6dHlocWhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNTQ5NDMsImV4cCI6MjA5NDkzMDk0M30.W84AzhlAtR3PGXLAGKSHUFJosk6oFngdV58q8Ewhicg';
+const H={'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY};
 
 const CATS={vatLieuTho:'🧱 Vật Liệu Thô',hoanThien:'🎨 Hoàn Thiện',coDien:'⚡ Cơ Điện',khuonCua:'🚪 Khung Cửa',sanLap:'🏔️ San Lấp & Móng',khac:'📦 Khác'};
 function getCatLabel(cat){return CATS[cat]||cat||'Khác';}
@@ -443,23 +443,28 @@ let projDebounce=null;
 async function sb(table,method='GET',body=null,query=''){
   const url=`${SUPA_URL}/rest/v1/${table}${query}`;
   const headers={...H};
-  if(method==='POST'||method==='PATCH') headers['Prefer']='return=representation';
-  if(method==='POST') headers['Content-Profile']='public';
-  if(method==='PATCH') headers['Content-Profile']='public';
+  if(method==='POST'||method==='PATCH'){
+    headers['Prefer']='return=representation';
+  }
   const opts={method,headers};
   if(body)opts.body=JSON.stringify(body);
-  const r=await fetch(url,opts);
-  if(!r.ok){
-    const e=await r.text();
-    console.error(`SB ERROR [${method} ${table}]:`,e,body);
-    // Try parse error message
-    try{const j=JSON.parse(e);throw new Error(j.message||j.details||e);}catch(pe){if(pe.message!==e)throw pe;}
-    throw new Error(e);
+  try{
+    const r=await fetch(url,opts);
+    if(!r.ok){
+      const e=await r.text();
+      console.error(`SB ERROR [${method} ${table}]:`,e);
+      try{const j=JSON.parse(e);throw new Error(j.message||j.details||j.hint||e);}catch(pe){throw pe;}
+    }
+    if(method==='DELETE')return null;
+    const text=await r.text();
+    if(!text)return [];
+    return JSON.parse(text);
+  }catch(err){
+    if(err.name==='TypeError'&&err.message.includes('Load failed')){
+      throw new Error('Mất kết nối mạng — vui lòng kiểm tra WiFi');
+    }
+    throw err;
   }
-  if(method==='DELETE')return null;
-  const text=await r.text();
-  if(!text)return [];
-  try{return JSON.parse(text);}catch{return [];}
 }
 
 function fmt(n){
