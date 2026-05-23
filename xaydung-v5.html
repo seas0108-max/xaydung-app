@@ -897,14 +897,14 @@ function renderTongHop(){
   `;
 
   // Chi tiết từng danh mục
-  const content=document.getElementById('th-content');
+  const thEl=document.getElementById('th-content');
   const hasData=D.ms.length>0;
-  if(!hasData){content.innerHTML='<div class="empty">Chưa có đơn hàng nào</div>';return;}
+  if(!hasData){thEl.innerHTML='<div class="empty">Chưa có đơn hàng nào</div>';return;}
 
   // Get all unique cats from data
   const allCats=[...new Set(D.ms.map(o=>o.cat||'Khác'))];
   
-  content.innerHTML=allCats.map((catKey)=>{
+  thEl.innerHTML=allCats.map((catKey)=>{
     const catName=getCatLabel(catKey);
     const g=groups[catKey];
     if(!g||!g.items.length)return'';
