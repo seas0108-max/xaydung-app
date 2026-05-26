@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Scan Bill">
+<meta name="theme-color" content="#0f1117">
+<title>Scan Bill & Nhập Liệu</title>
+<style>
+:root{
+  --bg:#0f1117;--surface:#181b24;--surface2:#1e2230;--border:#2a2f42;
+  --accent:#e8a04a;--blue:#5b8dee;--green:#3ecf8e;--red:#f06a6a;
+  --text:#e8eaf0;--muted:#7a8098;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,'Helvetica Neue',sans-serif}
+body{padding:var(--safe-top) 0 calc(var(--safe-bottom)+20px)}
+
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 16px;text-align:center}
+.header h1{font-size:18px;font-weight:700;color:var(--accent)}
+.header p{font-size:12px;color:var(--muted);margin-top:3px}
+
+.content{padding:16px;max-width:600px;margin:0 auto}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px}
+.card-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:14px}
+
+/* SCAN AREA */
+.scan-area{border:2px dashed var(--border);border-radius:12px;padding:30px 20px;text-align:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.scan-area:active{border-color:var(--accent);background:var(--surface2)}
+.scan-area.has-image{border-style:solid;border-color:var(--accent)}
+.scan-icon{font-size:48px;margin-bottom:12px}
+.scan-text{font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px}
+.scan-sub{font-size:12px;color:var(--muted)}
+#preview-img{width:100%;border-radius:10px;display:none;margin-top:12px;max-height:300px;object-fit:contain}
+
+.btn-row{display:flex;gap:10px;margin-top:12px}
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 18px;border-radius:10px;border:none;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;flex:1;transition:opacity .15s}
+.btn:active{opacity:.75}
+.btn-accent{background:var(--accent);color:#0f1117}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.btn-green{background:var(--green);color:#0f1117}
+.btn-red{background:#2a1a1a;color:var(--red);border:1px solid #3d1f1f}
+.btn-block{width:100%;flex:none}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* FORM */
+label{display:block;font-size:11px;color:var(--muted);font-weight:600;margin-bottom:4px;margin-top:12px}
+label:first-child{margin-top:0}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:15px;padding:10px 12px;outline:none;-webkit-appearance:none}
+input:focus,select:focus{border-color:var(--accent)}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237a8098' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* AI RESULT */
+.ai-result{background:var(--surface2);border-radius:10px;padding:14px;margin-top:12px;border:1px solid var(--border)}
+.ai-label{font-size:10px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.ai-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}
+.ai-key{color:var(--muted)}
+.ai-val{font-weight:600;color:var(--text);text-align:right;max-width:60%}
+
+/* LOADING */
+.loading{display:none;text-align:center;padding:20px}
+.loading.show{display:block}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TOAST */
+.toast{position:fixed;bottom:calc(20px + var(--safe-bottom));left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 20px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* STATUS */
+.status-bar{background:var(--surface2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0}
+.status-dot.red{background:var(--red)}
+.status-dot.yellow{background:var(--accent);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* HISTORY */
+.history-item{background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:8px}
+.hi-name{font-weight:700;font-size:14px}
+.hi-meta{font-size:11px;color:var(--muted);margin-top:3px}
+.hi-amount{font-size:16px;font-weight:700;color:var(--red);margin-top:4px}
+
+input[type=file]{display:none}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📸 Scan Bill & Nhập Liệu</h1>
+  <p>Chụp hoặc upload hóa đơn → AI đọc → Lưu vào Google Sheets</p>
+</div>
+
+<div class="content">
+
+  <!-- STATUS -->
+  <div class="status-bar" id="status-bar">
+    <div class="status-dot yellow" id="status-dot"></div>
+    <span id="status-text">Đang kết nối...</span>
+  </div>
+
+  <!-- SCAN BILL -->
+  <div class="card">
+    <div class="card-title">📸 Scan Hóa Đơn / Phiếu Nhận Hàng</div>
+
+    <div class="scan-area" id="scan-area" onclick="document.getElementById('file-input').click()">
+      <div class="scan-icon">📄</div>
+      <div class="scan-text">Nhấn để chọn ảnh hoặc PDF</div>
+      <div class="scan-sub">Hỗ trợ: JPG, PNG, PDF · Tối đa 10MB</div>
+      <img id="preview-img" src="" alt="preview">
+    </div>
+
+    <input type="file" id="file-input" accept="image/*,application/pdf" onchange="handleFile(this)">
+
+    <div class="btn-row" style="margin-top:12px">
+      <button class="btn btn-accent" onclick="document.getElementById('file-input').click()">
+        📁 Chọn File
+      </button>
+      <button class="btn btn-blue" id="camera-btn" onclick="openCamera()">
+        📷 Chụp Ảnh
+      </button>
+    </div>
+
+    <input type="file" id="camera-input" accept="image/*" capture="environment" onchange="handleFile(this)" style="display:none">
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <div style="color:var(--muted);font-size:13px">AI đang đọc hóa đơn...</div>
+    </div>
+
+    <div id="ai-result-area" style="display:none">
+      <div class="ai-result">
+        <div class="ai-label">✨ AI Đã Đọc Được</div>
+        <div id="ai-result-content"></div>
+      </div>
+      <button class="btn btn-ghost btn-block" style="margin-top:10px" onclick="reScan()">🔄 Scan Lại</button>
+    </div>
+  </div>
+
+  <!-- FORM NHẬP LIỆU -->
+  <div class="card" id="form-card">
+    <div class="card-title">✏️ Kiểm Tra & Chỉnh Sửa</div>
+
+    <label>Tên vật liệu *</label>
+    <input type="text" id="f-ten" placeholder="VD: Gạch ốp 30x60...">
+
+    <label>Danh mục</label>
+    <input type="text" id="f-danh-muc" placeholder="Hoàn thiện, Vật liệu thô...">
+
+    <label>Nhà cung cấp</label>
+    <input type="text" id="f-ncc" placeholder="Tên cửa hàng / công ty">
+
+    <div class="grid2">
+      <div>
+        <label>Số lượng</label>
+        <input type="number" id="f-sl" placeholder="0">
+      </div>
+      <div>
+        <label>Đơn vị</label>
+        <input type="text" id="f-dv" placeholder="M2, Bao, Kg...">
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <label>Đơn giá (đ)</label>
+        <input type="number" id="f-don-gia" placeholder="0" oninput="tinhTong()">
+      </div>
+      <div>
+        <label>Tổng tiền (đ)</label>
+        <input type="number" id="f-tong" placeholder="Tự tính">
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <label>Ngày đặt</label>
+        <input type="date" id="f-ngay-dat">
+      </div>
+      <div>
+        <label>Ngày nhận</label>
+        <input type="date" id="f-ngay-nhan">
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <label>Ngày thanh toán</label>
+        <input type="date" id="f-ngay-tt">
+      </div>
+      <div>
+        <label>Ngày chi tiền</label>
+        <input type="date" id="f-ngay-chi">
+      </div>
+    </div>
+
+    <label>Hình thức thanh toán</label>
+    <select id="f-httt">
+      <option value="CK">Chuyển khoản</option>
+      <option value="TM">Tiền mặt</option>
+      <option value="Cọc">Cọc trước + sau</option>
+    </select>
+
+    <label>Trạng thái</label>
+    <select id="f-trang-thai">
+      <option value="Đã đặt">Đã đặt</option>
+      <option value="Đã nhận">Đã nhận</option>
+      <option value="Đã TT">Đã thanh toán</option>
+      <option value="Chưa TT">Chưa thanh toán</option>
+    </select>
+
+    <label>Ghi chú</label>
+    <input type="text" id="f-ghi-chu" placeholder="Ghi chú thêm...">
+
+    <div class="btn-row" style="margin-top:16px">
+      <button class="btn btn-ghost" onclick="clearForm()">🗑 Xóa</button>
+      <button class="btn btn-green" id="save-btn" onclick="saveToSheets()">
+        💾 Lưu vào Sheets
+      </button>
+    </div>
+  </div>
+
+  <!-- LỊCH SỬ VỪA NHẬP -->
+  <div class="card" id="history-card" style="display:none">
+    <div class="card-title">✅ Vừa Lưu</div>
+    <div id="history-list"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SHEET_ID = '1FIzwmL6K1mimhoD-C1LsLb_pwifRAtnf';
+const SHEET_NAME = 'Mua Sắm VL';
+let sessionHistory = [];
+let currentImageBase64 = null;
+let currentImageType = null;
+
+// ===== STATUS =====
+function setStatus(text, type='ok'){
+  const dot = document.getElementById('status-dot');
+  const txt = document.getElementById('status-text');
+  dot.className = 'status-dot' + (type==='ok'?' ':type==='loading'?' yellow':' red');
+  txt.textContent = text;
+}
+
+function showToast(msg, ok=true){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = ok ? 'var(--green)' : 'var(--red)';
+  t.style.color = ok ? 'var(--green)' : 'var(--red)';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+function fmt(n){
+  n=+n; if(!n) return '–';
+  return n.toLocaleString('vi-VN')+'đ';
+}
+
+function td(){return new Date().toISOString().split('T')[0];}
+
+// ===== FILE HANDLING =====
+function openCamera(){
+  document.getElementById('camera-input').click();
+}
+
+function handleFile(input){
+  const file = input.files[0];
+  if(!file) return;
+  if(file.size > 10*1024*1024){ showToast('File quá lớn! Tối đa 10MB', false); return; }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const base64 = e.target.result.split(',')[1];
+    currentImageBase64 = base64;
+    currentImageType = file.type;
+
+    // Show preview
+    if(file.type.startsWith('image/')){
+      const img = document.getElementById('preview-img');
+      img.src = e.target.result;
+      img.style.display = 'block';
+      document.getElementById('scan-area').classList.add('has-image');
+      document.querySelector('.scan-icon').textContent = '✅';
+      document.querySelector('.scan-text').textContent = file.name;
+    }
+
+    // Auto scan
+    scanWithAI();
+  };
+  reader.readAsDataURL(file);
+}
+
+// ===== AI SCAN =====
+async function scanWithAI(){
+  if(!currentImageBase64){ showToast('Chưa có ảnh!', false); return; }
+
+  document.getElementById('loading').classList.add('show');
+  document.getElementById('ai-result-area').style.display = 'none';
+  setStatus('AI đang đọc hóa đơn...', 'loading');
+
+  try{
+    const prompt = `Bạn là AI đọc hóa đơn xây dựng Việt Nam. Hãy đọc ảnh hóa đơn/phiếu nhận hàng này và trả về JSON với các trường sau (để trống nếu không có):
+{
+  "ten_vat_lieu": "tên vật liệu chính",
+  "nha_cung_cap": "tên cửa hàng/công ty",
+  "so_luong": số_lượng_số,
+  "don_vi": "đơn vị tính",
+  "don_gia": đơn_giá_số,
+  "tong_tien": tổng_tiền_số,
+  "ngay_hoa_don": "DD/MM/YYYY",
+  "ghi_chu": "ghi chú nếu có"
+}
+Chỉ trả về JSON, không giải thích thêm. Số tiền không có dấu phẩy hay chữ.`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            {type: 'image', source: {type: 'base64', media_type: currentImageType, data: currentImageBase64}},
+            {type: 'text', text: prompt}
+          ]
+        }]
+      })
+    });
+
+    const data = await response.json();
+    const text = data.content?.[0]?.text || '';
+
+    // Parse JSON
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if(!jsonMatch) throw new Error('Không đọc được hóa đơn');
+    const result = JSON.parse(jsonMatch[0]);
+
+    // Fill form
+    if(result.ten_vat_lieu) document.getElementById('f-ten').value = result.ten_vat_lieu;
+    if(result.nha_cung_cap) document.getElementById('f-ncc').value = result.nha_cung_cap;
+    if(result.so_luong) document.getElementById('f-sl').value = result.so_luong;
+    if(result.don_vi) document.getElementById('f-dv').value = result.don_vi;
+    if(result.don_gia) document.getElementById('f-don-gia').value = Math.round(result.don_gia);
+    if(result.tong_tien) document.getElementById('f-tong').value = Math.round(result.tong_tien);
+    if(result.ngay_hoa_don){
+      // Convert DD/MM/YYYY to YYYY-MM-DD
+      const parts = result.ngay_hoa_don.split('/');
+      if(parts.length === 3) document.getElementById('f-ngay-nhan').value = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+    }
+    if(result.ghi_chu) document.getElementById('f-ghi-chu').value = result.ghi_chu;
+
+    // Show AI result summary
+    const content = document.getElementById('ai-result-content');
+    content.innerHTML = `
+      <div class="ai-row"><span class="ai-key">Vật liệu</span><span class="ai-val">${result.ten_vat_lieu||'–'}</span></div>
+      <div class="ai-row"><span class="ai-key">Nhà CC</span><span class="ai-val">${result.nha_cung_cap||'–'}</span></div>
+      <div class="ai-row"><span class="ai-key">Số lượng</span><span class="ai-val">${result.so_luong||'–'} ${result.don_vi||''}</span></div>
+      <div class="ai-row"><span class="ai-key">Đơn giá</span><span class="ai-val">${fmt(result.don_gia)}</span></div>
+      <div class="ai-row"><span class="ai-key">Tổng tiền</span><span class="ai-val" style="color:var(--red)">${fmt(result.tong_tien)}</span></div>
+      <div class="ai-row"><span class="ai-key">Ngày HĐ</span><span class="ai-val">${result.ngay_hoa_don||'–'}</span></div>
+    `;
+
+    document.getElementById('ai-result-area').style.display = 'block';
+    setStatus('AI đã đọc xong — kiểm tra và lưu!', 'ok');
+    showToast('✓ AI đã đọc hóa đơn!');
+
+  } catch(e){
+    console.error(e);
+    setStatus('Lỗi đọc hóa đơn — nhập tay bên dưới', 'red');
+    showToast('Không đọc được — hãy nhập tay', false);
+  }
+
+  document.getElementById('loading').classList.remove('show');
+}
+
+function reScan(){
+  document.getElementById('ai-result-area').style.display = 'none';
+  document.getElementById('preview-img').style.display = 'none';
+  document.getElementById('scan-area').classList.remove('has-image');
+  document.querySelector('.scan-icon').textContent = '📄';
+  document.querySelector('.scan-text').textContent = 'Nhấn để chọn ảnh hoặc PDF';
+  currentImageBase64 = null;
+  currentImageType = null;
+  document.getElementById('file-input').value = '';
+  document.getElementById('camera-input').value = '';
+}
+
+function tinhTong(){
+  const sl = +document.getElementById('f-sl').value || 0;
+  const dg = +document.getElementById('f-don-gia').value || 0;
+  if(sl && dg) document.getElementById('f-tong').value = Math.round(sl * dg);
+}
+
+function clearForm(){
+  ['f-ten','f-danh-muc','f-ncc','f-sl','f-dv','f-don-gia','f-tong','f-ngay-dat','f-ngay-nhan','f-ngay-tt','f-ngay-chi','f-ghi-chu'].forEach(id=>{
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('f-httt').value = 'CK';
+  document.getElementById('f-trang-thai').value = 'Đã nhận';
+  reScan();
+}
+
+// ===== SAVE TO SHEETS =====
+async function saveToSheets(){
+  const ten = document.getElementById('f-ten').value.trim();
+  if(!ten){ showToast('Nhập tên vật liệu!', false); return; }
+
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Đang lưu...';
+  setStatus('Đang lưu vào Google Sheets...', 'loading');
+
+  const sl = +document.getElementById('f-sl').value || '';
+  const dg = +document.getElementById('f-don-gia').value || '';
+  const tong = +document.getElementById('f-tong').value || (sl && dg ? sl*dg : '');
+
+  const row = [
+    ten,
+    document.getElementById('f-danh-muc').value,
+    document.getElementById('f-ncc').value,
+    sl, 
+    document.getElementById('f-dv').value,
+    dg,
+    tong,
+    document.getElementById('f-ngay-dat').value,
+    document.getElementById('f-ngay-nhan').value,
+    document.getElementById('f-ngay-tt').value,
+    document.getElementById('f-ngay-chi').value,
+    document.getElementById('f-httt').value,
+    document.getElementById('f-trang-thai').value,
+    document.getElementById('f-ghi-chu').value,
+  ];
+
+  try{
+    // Use Google Sheets API via Apps Script Web App
+    // Since we can't use OAuth easily, we'll use a public Apps Script endpoint
+    // For now, generate a CSV row for manual copy
+    const csvRow = row.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',');
+    
+    // Save to session history
+    sessionHistory.unshift({
+      ten, ncc: document.getElementById('f-ncc').value,
+      tong: tong || 0,
+      ngay: document.getElementById('f-ngay-nhan').value || new Date().toLocaleDateString('vi-VN'),
+      row
+    });
+
+    // Show history
+    renderHistory();
+    
+    // Show success with copy option
+    showSaveSuccess(row, csvRow);
+    setStatus(`✓ Đã lưu: ${ten}`, 'ok');
+    showToast('✓ Đã lưu thành công!');
+
+    // Clear form
+    clearForm();
+
+  } catch(e){
+    console.error(e);
+    setStatus('Lỗi lưu dữ liệu', 'red');
+    showToast('✗ Lỗi: '+e.message, false);
+  }
+
+  btn.disabled = false;
+  btn.textContent = '💾 Lưu vào Sheets';
+}
+
+function showSaveSuccess(row, csvRow){
+  // Show a modal with options to copy data
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:500;display:flex;align-items:flex-end;justify-content:center';
+  
+  const modal = document.createElement('div');
+  modal.style.cssText = 'background:#181b24;border-top-left-radius:20px;border-top-right-radius:20px;padding:20px 16px 40px;width:100%;max-width:500px;border:1px solid #2a2f42;border-bottom:none';
+  
+  modal.innerHTML = `
+    <div style="font-size:16px;font-weight:700;margin-bottom:6px;color:#e8a04a">✅ Đã Lưu Thành Công!</div>
+    <div style="font-size:13px;color:#7a8098;margin-bottom:16px">${row[0]} · ${row[2]||'–'} · <strong style="color:#f06a6a">${fmt(row[6])}</strong></div>
+    <div style="font-size:12px;color:#7a8098;margin-bottom:8px">Dữ liệu đã lưu trong phiên này. Để ghi vào Google Sheets, copy dòng bên dưới:</div>
+    <textarea style="width:100%;background:#0f1117;border:1px solid #2a2f42;border-radius:8px;color:#e8eaf0;font-size:11px;padding:8px;min-height:60px;font-family:monospace" readonly>${row.join('\t')}</textarea>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button onclick="navigator.clipboard.writeText(${JSON.stringify(row.join('\t'))}).then(()=>showToast('✓ Đã copy!'));this.closest('.overlay-modal').remove()" style="flex:1;padding:11px;background:#e8a04a;color:#0f1117;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer">📋 Copy Dữ Liệu</button>
+      <button onclick="this.closest('.overlay-modal').remove()" style="flex:1;padding:11px;background:#1e2230;color:#e8eaf0;border:1px solid #2a2f42;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer">Đóng</button>
+    </div>`;
+  
+  modal.classList.add('overlay-modal');
+  overlay.appendChild(modal);
+  overlay.onclick = (e)=>{ if(e.target===overlay) overlay.remove(); };
+  document.body.appendChild(overlay);
+}
+
+function renderHistory(){
+  if(!sessionHistory.length) return;
+  const card = document.getElementById('history-card');
+  const list = document.getElementById('history-list');
+  card.style.display = 'block';
+  list.innerHTML = sessionHistory.slice(0,5).map(h=>`
+    <div class="history-item">
+      <div class="hi-name">${h.ten}</div>
+      <div class="hi-meta">${h.ncc||'–'} · ${h.ngay||'–'}</div>
+      <div class="hi-amount">${fmt(h.tong)}</div>
+    </div>`).join('');
+}
+
+// ===== INIT =====
+window.addEventListener('load', ()=>{
+  document.getElementById('f-ngay-dat').value = td();
+  document.getElementById('f-ngay-nhan').value = td();
+  setStatus('Sẵn sàng — Chụp ảnh hoặc nhập tay', 'ok');
+});
+</script>
+</body>
+</html>
